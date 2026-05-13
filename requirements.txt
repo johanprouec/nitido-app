@@ -1,8 +1,8 @@
-streamlit
-pandas
-numpy
-scikit-learn
-joblib
-matplotlib
-shap
-lime
+streamlit==1.41.1
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.6.1
+joblib==1.4.2
+matplotlib==3.10.0
+shap==0.46.0
+lime==0.2.0.1
