@@ -1,20 +1,60 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Nitido App
 
-# Run and deploy your AI Studio app
+Interfaz web para el proyecto Nitido: simulacion, auditoria y visualizacion de metricas de un modelo de prefiltrado de candidatos.
 
-This contains everything you need to run your app locally.
+## Stack
 
-View your app in AI Studio: https://ai.studio/apps/bf1df977-05aa-4449-8272-f3a521d0ae72
+- React 19
+- Vite
+- TypeScript
+- Tailwind CSS 4
+- Vercel
 
-## Run Locally
+## Desarrollo local
 
-**Prerequisites:**  Node.js
+1. Instalar dependencias:
 
+   ```bash
+   npm install
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. Crear `.env.local` a partir de `.env.example` y completar las variables necesarias.
+
+3. Levantar la app:
+
+   ```bash
+   npm run dev
+   ```
+
+4. Abrir `http://localhost:3000`.
+
+## Scripts
+
+- `npm run dev`: servidor local en el puerto 3000.
+- `npm run build`: build de produccion en `dist/`.
+- `npm run preview`: previsualiza el build.
+- `npm run lint`: validacion TypeScript sin emitir archivos.
+
+## GitHub
+
+Repositorio remoto configurado:
+
+```bash
+origin https://github.com/johanprouec/nitido-app.git
+```
+
+La rama principal es `main`.
+
+## Vercel
+
+Proyecto conectado:
+
+- Vercel project: `johan-velandias-projects/nitido-app`
+- Framework preset: `Vite`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Production URL: `https://nitido-app-red.vercel.app`
+
+## Modelo
+
+La interfaz todavia usa datos estaticos. El siguiente paso es convertir el modelo del Colab en un endpoint de inferencia y conectar el simulador con `fetch` desde React.
