@@ -1,0 +1,222 @@
+{
+    "umbral": 0.45,
+    "variables_continuas": [
+        "x1",
+        "x2",
+        "x6",
+        "x10",
+        "x11",
+        "x14",
+        "x15",
+        "x16"
+    ],
+    "variables_discretas": [
+        "x3",
+        "x4",
+        "x7",
+        "x8",
+        "x9",
+        "x12",
+        "x13",
+        "x18"
+    ],
+    "variables_binarias": [
+        "x5",
+        "x17"
+    ],
+    "variables_modelo": [
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "x8",
+        "x9",
+        "x10",
+        "x11",
+        "x12",
+        "x13",
+        "x14",
+        "x15",
+        "x16",
+        "x17",
+        "x18"
+    ],
+    "input_config": {
+        "x1": {
+            "tipo": "continua",
+            "min": 0.0,
+            "max": 25.0,
+            "default": 3.5
+        },
+        "x2": {
+            "tipo": "continua",
+            "min": 7.0,
+            "max": 100.0,
+            "default": 65.0
+        },
+        "x3": {
+            "tipo": "discreta",
+            "valores": [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0
+            ],
+            "default": 3.0
+        },
+        "x4": {
+            "tipo": "discreta",
+            "valores": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0
+            ],
+            "default": 2.0
+        },
+        "x5": {
+            "tipo": "binaria",
+            "valores": [
+                0,
+                1
+            ],
+            "default": 1
+        },
+        "x6": {
+            "tipo": "continua",
+            "min": 22.0,
+            "max": 65.0,
+            "default": 35.0
+        },
+        "x7": {
+            "tipo": "discreta",
+            "valores": [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0
+            ],
+            "default": 3.0
+        },
+        "x8": {
+            "tipo": "discreta",
+            "valores": [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0,
+                9.0,
+                10.0
+            ],
+            "default": 3.0
+        },
+        "x9": {
+            "tipo": "discreta",
+            "valores": [
+                0.0,
+                1.0,
+                2.0,
+                3.0
+            ],
+            "default": 1.0
+        },
+        "x10": {
+            "tipo": "continua",
+            "min": 3.0,
+            "max": 5.0,
+            "default": 3.8
+        },
+        "x11": {
+            "tipo": "continua",
+            "min": 0.1,
+            "max": 100.0,
+            "default": 51.4
+        },
+        "x12": {
+            "tipo": "discreta",
+            "valores": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0,
+                9.0,
+                10.0,
+                11.0
+            ],
+            "default": 3.0
+        },
+        "x13": {
+            "tipo": "discreta",
+            "valores": [
+                0.0,
+                1.0,
+                2.0,
+                3.0
+            ],
+            "default": 2.0
+        },
+        "x14": {
+            "tipo": "continua",
+            "min": 0.0,
+            "max": 24.0,
+            "default": 2.7
+        },
+        "x15": {
+            "tipo": "continua",
+            "min": 1.0,
+            "max": 50.0,
+            "default": 8.3
+        },
+        "x16": {
+            "tipo": "continua",
+            "min": 0.0,
+            "max": 100.0,
+            "default": 50.0
+        },
+        "x17": {
+            "tipo": "binaria",
+            "valores": [
+                0,
+                1
+            ],
+            "default": 1
+        },
+        "x18": {
+            "tipo": "discreta",
+            "valores": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0,
+                9.0,
+                10.0
+            ],
+            "default": 3.0
+        }
+    }
+}
