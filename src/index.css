@@ -34,13 +34,36 @@
 
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
+
+  --spacing-gutter: clamp(1rem, 2.5vw, 1.5rem);
+  --spacing-section-gap: clamp(2rem, 5vw, 4rem);
+  --spacing-container-padding-mobile: clamp(1rem, 4vw, 1.25rem);
+  --spacing-container-padding-desktop: clamp(2rem, 5vw, 4rem);
+  --spacing-safe: env(safe-area-inset-bottom);
   
   --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @layer base {
+  html {
+    width: 100%;
+    overflow-x: hidden;
+    text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-on-surface font-sans antialiased;
+    width: 100%;
+    min-width: 320px;
+    overflow-x: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  button, select, input {
+    font: inherit;
   }
 }
 
@@ -52,5 +75,55 @@
   .bg-mesh {
     background: radial-gradient(circle at 0% 0%, rgba(192, 193, 255, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 100% 100%, rgba(111, 0, 190, 0.1) 0%, transparent 50%);
+  }
+
+  .report-page {
+    @apply bg-white text-slate-950;
+  }
+
+  .report-card {
+    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm;
+  }
+}
+
+@media (max-width: 640px) {
+  .glass-card {
+    border-radius: 1rem;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #print-report,
+  #print-report * {
+    visibility: visible;
+  }
+
+  #print-report {
+    display: block !important;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    color: #0f172a !important;
+    background: #ffffff !important;
+  }
+
+  .no-print {
+    display: none !important;
   }
 }

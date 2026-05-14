@@ -5,6 +5,8 @@ import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
+  const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'https://nitido-app-red.vercel.app';
+
   return {
     plugins: [react(), tailwindcss()],
     define: {
@@ -21,6 +23,13 @@ export default defineConfig(({mode}) => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      proxy: {
+        '/api': {
+          target: apiProxyTarget,
+          changeOrigin: true,
+          secure: true,
+        },
+      },
     },
   };
 });
