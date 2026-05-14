@@ -11,7 +11,6 @@
 import { useState } from 'react';
 import { 
   Network, 
-  Search, 
   Bolt, 
   ShieldCheck, 
   BarChart3, 
@@ -20,13 +19,11 @@ import {
   Activity,
   History,
   Settings2,
-  ChevronRight,
   Plus,
   AlertCircle,
   TrendingUp,
   Cpu,
   Fingerprint,
-  Mic,
   Maximize2,
   FileDown
 } from 'lucide-react';
@@ -113,7 +110,7 @@ const IMAGES = {
 
 // --- Sub-components ---
 
-const DashboardView = () => (
+const DashboardView = ({ onNavigate }: { onNavigate: (view: ViewId) => void }) => (
   <div className="space-y-section-gap">
     <section className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center min-h-[600px]">
       <div className="lg:col-span-7 flex flex-col items-start gap-6">
@@ -123,7 +120,7 @@ const DashboardView = () => (
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/10 text-primary"
         >
           <Bolt className="w-4 h-4 fill-primary" />
-          <span className="font-mono text-xs uppercase tracking-wider">Version 2.4 Stable</span>
+          <span className="font-mono text-xs uppercase tracking-wider">Modelo desplegado en producción</span>
         </motion.div>
         
         <motion.h1 
@@ -132,7 +129,7 @@ const DashboardView = () => (
           transition={{ delay: 0.1 }}
           className="font-display text-5xl md:text-7xl font-bold leading-tight"
         >
-          NÍTIDO <span className="text-primary drop-shadow-[0_0_15px_rgba(192,193,255,0.4)]">AI Lab</span>
+          NÍTIDO <span className="text-primary drop-shadow-[0_0_15px_rgba(192,193,255,0.4)]">Decision Lab</span>
         </motion.h1>
         
         <motion.h2 
@@ -141,7 +138,7 @@ const DashboardView = () => (
           transition={{ delay: 0.2 }}
           className="font-display text-2xl md:text-3xl text-secondary max-w-2xl"
         >
-          Sistema explicable de prefiltrado de candidatos con Machine Learning
+          Sistema explicable de prefiltrado de candidatos
         </motion.h2>
         
         <motion.p 
@@ -150,7 +147,7 @@ const DashboardView = () => (
           transition={{ delay: 0.3 }}
           className="text-lg text-on-surface-variant max-w-xl leading-relaxed"
         >
-          Una plataforma interactiva diseñada para predecir, explicar y auditar decisiones de avance en procesos de selección con total transparencia.
+          Una plataforma interactiva para estimar si un candidato avanza a entrevista, explicar los factores del modelo y sustentar riesgos ante el CEO.
         </motion.p>
         
         <motion.div 
@@ -159,13 +156,13 @@ const DashboardView = () => (
           transition={{ delay: 0.4 }}
           className="flex flex-wrap gap-4 mt-4"
         >
-          <button className="px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-primary-container text-on-primary font-bold shadow-[0_0_20px_rgba(128,131,255,0.4)] hover:brightness-110 active:scale-95 transition-all">
+          <button onClick={() => onNavigate('simulate')} className="px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-primary-container text-on-primary font-bold shadow-[0_0_20px_rgba(128,131,255,0.4)] hover:brightness-110 active:scale-95 transition-all">
             Probar simulador
           </button>
-          <button className="px-8 py-4 rounded-xl border border-white/15 bg-white/5 backdrop-blur-md text-on-surface font-bold hover:bg-white/10 active:scale-95 transition-all">
-            Ver entregables
+          <button onClick={() => onNavigate('metrics')} className="px-8 py-4 rounded-xl border border-white/15 bg-white/5 backdrop-blur-md text-on-surface font-bold hover:bg-white/10 active:scale-95 transition-all">
+            Ver métricas
           </button>
-          <button className="px-8 py-4 rounded-xl border border-secondary/20 bg-secondary/5 text-secondary font-bold hover:bg-secondary/10 active:scale-95 transition-all flex items-center gap-2">
+          <button onClick={() => onNavigate('audit')} className="px-8 py-4 rounded-xl border border-secondary/20 bg-secondary/5 text-secondary font-bold hover:bg-secondary/10 active:scale-95 transition-all flex items-center gap-2">
             <ShieldCheck className="w-5 h-5" />
             Ver auditoría
           </button>
@@ -193,12 +190,12 @@ const DashboardView = () => (
             >
               <div className="flex items-center gap-2 text-tertiary">
                 <TrendingUp className="w-5 h-5" />
-                <span className="font-mono text-xs font-bold">Accuracy: 98.2%</span>
+                <span className="font-mono text-xs font-bold">Umbral: 0.45</span>
               </div>
             </motion.div>
             <div className="absolute bottom-12 left-8 glass-card p-4 rounded-xl border-white/10">
               <div className="flex flex-col gap-1">
-                <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider">Model Processing</span>
+                <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider">Inferencia activa</span>
                 <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
@@ -218,19 +215,19 @@ const DashboardView = () => (
       {[
         { 
           title: "Simulación Predictiva", 
-          desc: "Experimenta con diferentes perfiles de candidatos y observa cómo los modelos de ML generan puntuaciones en tiempo real.",
+          desc: "Ingresa las 18 variables anonimizadas y obtén la probabilidad real de avance del modelo exportado desde Colab.",
           icon: Activity,
           color: "primary"
         },
         { 
           title: "IA Explicable (XAI)", 
-          desc: "Desglosamos el 'porqué' de cada decisión mediante valores SHAP y LIME, eliminando la caja negra del reclutamiento.",
+          desc: "Mostramos los factores locales que más empujan cada predicción hacia avance o rechazo.",
           icon: Monitor,
           color: "secondary"
         },
         { 
           title: "Auditoría Ética", 
-          desc: "Herramientas integradas para detectar y mitigar sesgos algorítmicos, asegurando procesos justos y equitativos.",
+          desc: "Documentamos riesgos, límites de uso y la necesidad de revisión humana antes de producción.",
           icon: ShieldCheck,
           color: "tertiary"
         }
@@ -256,18 +253,18 @@ const DashboardView = () => (
 const AuditView = () => (
   <div className="space-y-section-gap max-w-7xl mx-auto">
     <div className="space-y-4">
-      <h2 className="text-3xl font-bold text-primary">Estado de Entregables</h2>
+      <h2 className="text-3xl font-bold text-primary">Estado del reto</h2>
       <div className="w-full bg-surface-container-highest h-4 rounded-full overflow-hidden border border-white/5">
         <motion.div 
           initial={{ width: 0 }}
-          animate={{ width: "85%" }}
+          animate={{ width: "100%" }}
           transition={{ duration: 1.5, ease: "easeOut" }}
           className="bg-gradient-to-r from-primary-container to-secondary-container h-full rounded-full shadow-[0_0_15px_rgba(192,193,255,0.4)]"
         ></motion.div>
       </div>
       <div className="flex justify-between font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">
-        <span>Progreso total del proyecto</span>
-        <span>85% Completado</span>
+        <span>App, modelo y API</span>
+        <span>Funcional en Vercel</span>
       </div>
     </div>
 
@@ -278,10 +275,10 @@ const AuditView = () => (
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
         {[
-          { title: "Informe ejecutivo", desc: "Resumen estratégico de hallazgos, impacto de negocio y recomendaciones clave.", status: "Incluido" },
-          { title: "Cuadernillo técnico", desc: "Documentación detallada de arquitectura, modelos y validación estadística.", status: "Desarrollado" },
-          { title: "App funcional", desc: "Interfaz interactiva para visualización de predicciones y gestión de candidatos.", status: "Incluido" },
-          { title: "Sustentación oral", desc: "Presentación presencial de los resultados finales ante el comité evaluador.", status: "Desarrollado" }
+          { title: "Informe ejecutivo", desc: "Resumen estratégico para Juanpis: utilidad del modelo, riesgos y recomendación final.", status: "Por redactar" },
+          { title: "Cuadernillo técnico", desc: "Notebook con EDA, modelado, evaluación, XAI, contrafactuales y auditoría.", status: "Base lista" },
+          { title: "App funcional", desc: "Simulador React/Vercel conectado al modelo real y endpoint de inferencia.", status: "Desplegada" },
+          { title: "Sustentación oral", desc: "Demo de caso aprobado, caso rechazado y recomendación de salida a producción.", status: "Preparar guion" }
         ].map((item, i) => (
           <motion.div 
             key={i}
@@ -311,10 +308,10 @@ const AuditView = () => (
         <div className="absolute left-[3px] md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-primary via-secondary to-tertiary rounded-full opacity-30"></div>
         
         {[
-          { phase: 1, title: "Comprensión de datos", color: "primary", content: "5,000 candidates processed. 18 core feature variables identified." },
-          { phase: 2, title: "Preprocesamiento", color: "secondary", content: "Logistic Regression, Random Forest. Optimization: Threshold fixed at 0.45" },
-          { phase: 3, title: "Evaluación", color: "tertiary", content: "F1-score: 0.7241, AUC: 0.8056. Explainability via SHAP & LIME." },
-          { phase: 4, title: "Auditoría", color: "error", content: "Bias risk detected in demographic slices. Optimized Var x1, x2, x5." }
+          { phase: 1, title: "Comprensión de datos", color: "primary", content: "5.000 candidatos históricos, 18 variables anonimizadas y etiqueta binaria avanza." },
+          { phase: 2, title: "Preprocesamiento", color: "secondary", content: "Pipeline con imputación, escalado y modelo final de regresión logística." },
+          { phase: 3, title: "Evaluación", color: "tertiary", content: "Umbral operativo 0.45, F1 de prueba 0.7241 y AUC de prueba 0.8056." },
+          { phase: 4, title: "Auditoría", color: "error", content: "Variables anonimizadas: el modelo requiere supervisión humana y revisión de sesgos antes de producción." }
         ].map((p, i) => (
           <div key={i} className={`relative mb-16 md:flex ${i % 2 === 0 ? "md:justify-start" : "md:flex-row-reverse md:justify-start"} items-center w-full`}>
             <div className="absolute left-[-5px] md:left-1/2 md:-translate-x-1/2 w-5 h-5 rounded-full bg-background border-4 border-primary z-10 box-content -ml-[3px]" style={{ borderColor: `var(--color-${p.color})` }} />
@@ -324,7 +321,7 @@ const AuditView = () => (
               viewport={{ once: true }}
               className={`ml-10 md:ml-0 md:w-[45%] glass-card p-6 rounded-2xl border-l-4 border-l-${p.color}`}
             >
-              <span className={`font-mono text-[10px] text-${p.color} uppercase tracking-widest mb-1 block`}>Phase {p.phase}</span>
+              <span className={`font-mono text-[10px] text-${p.color} uppercase tracking-widest mb-1 block`}>Fase {p.phase}</span>
               <h5 className="text-lg font-bold mb-2">{p.title}</h5>
               <p className="text-sm text-on-surface-variant leading-relaxed">{p.content}</p>
             </motion.div>
@@ -397,7 +394,7 @@ const SimulatorView = () => {
       <div>
         <h1 className="text-4xl font-bold mb-2">Simulador de candidato</h1>
         <p className="text-on-surface-variant max-w-3xl">
-          Ingresa las variables anonimizadas del candidato. El modelo usa el umbral 0.45 para decidir si avanza a entrevista.
+          Ingresa las variables anonimizadas del candidato. El modelo usa el umbral 0.45 para estimar si avanza a entrevista; la decisión final debe tener revisión humana.
         </p>
       </div>
 
@@ -471,7 +468,7 @@ const SimulatorView = () => {
           </div>
           <div>
             <h3 className="text-2xl font-bold">Inferencia del modelo NÍTIDO</h3>
-            <p className="text-on-surface-variant">Regresión logística con preprocesamiento exportado desde Colab.</p>
+            <p className="text-on-surface-variant">Regresión logística con pipeline de preprocesamiento, desplegada como función Python en Vercel.</p>
           </div>
         </div>
         <button
@@ -514,6 +511,9 @@ const SimulatorView = () => {
 
           <div className="lg:col-span-5 glass-card rounded-xl p-8">
             <h3 className="text-2xl font-bold mb-6">Explicación local</h3>
+            <p className="text-sm text-on-surface-variant mb-5">
+              Impactos positivos aumentan la probabilidad de avanzar; impactos negativos la reducen.
+            </p>
             <div className="space-y-3">
               {result.factores.map((factor) => (
                 <div key={factor.variable} className="space-y-2">
@@ -539,7 +539,7 @@ const SimulatorView = () => {
             {result.contrafactual ? (
               <div className="space-y-4 text-sm">
                 <p className="text-on-surface-variant">
-                  Cambiar <span className="text-primary font-mono">{result.contrafactual.variable}</span> podría llevar el caso a avanzar.
+                  Cambiar <span className="text-primary font-mono">{result.contrafactual.variable}</span> podría mover el caso por encima del umbral.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-surface-container-low/60 rounded-lg p-3">
@@ -563,6 +563,15 @@ const SimulatorView = () => {
           </div>
         </section>
       )}
+
+      <section className="glass-card rounded-xl p-6 border-secondary/20">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
+          <p className="text-sm text-on-surface-variant leading-relaxed">
+            Nota de uso responsable: las variables están anonimizadas. Esta app demuestra el comportamiento técnico del modelo, pero no debe usarse como decisión automática final sin auditoría de variables, monitoreo de sesgos y revisión humana.
+          </p>
+        </div>
+      </section>
     </div>
   );
 };
@@ -571,15 +580,15 @@ const MetricsView = () => (
   <div className="space-y-10">
     <section>
       <h1 className="text-4xl font-bold mb-2 text-on-surface">Resumen del modelo</h1>
-      <p className="text-on-surface-variant max-w-2xl">Visualización detallada de los resultados de entrenamiento y métricas de validación para el modelo de clasificación de activos.</p>
+      <p className="text-on-surface-variant max-w-2xl">Resultados principales del modelo final de prefiltrado y criterios usados para escoger el umbral operativo.</p>
     </section>
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {[
-        { label: "Final Model", val: "Logistic Regression", meta: "ID: LR-992-BETA", icon: Cpu },
-        { label: "Threshold", val: "0.45", progress: true, color: "secondary" },
-        { label: "F1-score Test", val: "0.7241", trend: "+2.4% vs baseline", icon: BarChart3, color: "tertiary" },
-        { label: "AUC Test", val: "0.8056", reviewers: true, color: "primary" }
+        { label: "Modelo final", val: "Regresión logística", meta: "Pipeline sklearn", icon: Cpu },
+        { label: "Umbral", val: "0.45", progress: true, color: "secondary" },
+        { label: "F1-score test", val: "0.7241", trend: "Métrica principal", icon: BarChart3, color: "tertiary" },
+        { label: "AUC test", val: "0.8056", validated: true, color: "primary" }
       ].map((m, i) => (
         <motion.div 
           key={i}
@@ -599,13 +608,13 @@ const MetricsView = () => (
             </div>
           )}
           {m.trend && <div className="flex items-center gap-1 text-green-400 font-mono text-[10px] mt-4 uppercase"><TrendingUp className="w-3 h-3" /> {m.trend}</div>}
-          {m.reviewers && (
+          {m.validated && (
             <div className="flex items-center gap-3 mt-4">
               <div className="flex -space-x-2">
                 <div className="w-6 h-6 rounded-full border border-surface bg-surface-container flex items-center justify-center text-[8px] font-bold">R1</div>
                 <div className="w-6 h-6 rounded-full border border-surface bg-surface-container flex items-center justify-center text-[8px] font-bold">R2</div>
               </div>
-              <span className="font-mono text-[10px] opacity-60 uppercase">Verified by 2 reviewers</span>
+              <span className="font-mono text-[10px] opacity-60 uppercase">Validado en notebook</span>
             </div>
           )}
         </motion.div>
@@ -616,8 +625,8 @@ const MetricsView = () => (
       <div className="lg:col-span-2 glass-card rounded-xl p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold">Métricas de Rendimiento</h2>
-            <p className="text-sm text-on-surface-variant">Comparativa multidimensional del modelo final</p>
+            <h2 className="text-2xl font-bold">Métricas de rendimiento</h2>
+            <p className="text-sm text-on-surface-variant">Resumen visual para sustentación</p>
           </div>
           <div className="flex gap-2">
             <button className="bg-surface-container-highest p-2 rounded-lg hover:bg-surface-variant transition-colors border border-white/5"><FileDown className="w-5 h-5" /></button>
@@ -630,9 +639,9 @@ const MetricsView = () => (
             {[1, 2, 3, 4].map(l => <div key={l} className="w-full border-t border-on-surface" />)}
           </div>
           {[
-            { l: "Accuracy", v: 85, color: "primary" },
-            { l: "Precision", v: 78, color: "secondary" },
-            { l: "Recall", v: 68, color: "tertiary" },
+            { l: "Exactitud", v: 85, color: "primary" },
+            { l: "Precisión", v: 78, color: "secondary" },
+            { l: "Sensibilidad", v: 68, color: "tertiary" },
             { l: "F1", v: 72, color: "primary" },
             { l: "AUC", v: 81, color: "secondary" }
           ].map((bar, i) => (
@@ -654,28 +663,28 @@ const MetricsView = () => (
       </div>
 
       <div className="glass-card rounded-xl p-8">
-        <h2 className="text-2xl font-bold mb-8">Confusion Matrix</h2>
+        <h2 className="text-2xl font-bold mb-8">Matriz de confusión</h2>
         <div className="grid grid-cols-2 gap-3 mb-10">
           <div className="bg-primary/20 border border-primary/30 p-6 rounded-2xl flex flex-col items-center justify-center">
-            <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">True Neg</span>
+            <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Verd. neg.</span>
             <span className="text-4xl font-bold text-primary">482</span>
           </div>
           <div className="bg-surface-container-high border border-white/5 p-6 rounded-2xl flex flex-col items-center justify-center opacity-60">
-            <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">False Pos</span>
+            <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Falso pos.</span>
             <span className="text-4xl font-bold">54</span>
           </div>
           <div className="bg-surface-container-high border border-white/5 p-6 rounded-2xl flex flex-col items-center justify-center opacity-60">
-            <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">False Neg</span>
+            <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Falso neg.</span>
             <span className="text-4xl font-bold">112</span>
           </div>
           <div className="bg-secondary/20 border border-secondary/30 p-6 rounded-2xl flex flex-col items-center justify-center">
-            <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">True Pos</span>
+            <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Verd. pos.</span>
             <span className="text-4xl font-bold text-secondary">298</span>
           </div>
         </div>
         <div className="space-y-4">
           <div className="flex justify-between font-mono text-[10px] uppercase">
-            <span className="text-on-surface-variant">Class Balance</span>
+            <span className="text-on-surface-variant">Balance de clases</span>
             <span className="text-on-surface">62% / 38%</span>
           </div>
           <div className="w-full h-2 rounded-full overflow-hidden flex shadow-inner border border-white/5">
@@ -690,14 +699,14 @@ const MetricsView = () => (
       <section className="glass-card rounded-xl p-8">
         <div className="flex items-center gap-3 mb-8">
           <History className="text-primary w-6 h-6" />
-          <h2 className="text-2xl font-bold">Historial de Entrenamiento</h2>
+          <h2 className="text-2xl font-bold">Historial de entrenamiento</h2>
         </div>
         <div className="space-y-6">
           {[
-            { l: "Iniciado", v: "Oct 12, 2023 - 14:22" },
-            { l: "Duración", v: "0h 14m 22s" },
-            { l: "Optimizador", v: "AdamW (lr=0.001)" },
-            { l: "Regularización", v: "L2 (alpha=0.01)" }
+            { l: "Datos", v: "5.000 candidatos" },
+            { l: "Partición", v: "train / validation / test" },
+            { l: "Preprocesamiento", v: "Imputación + escalado" },
+            { l: "Regularización", v: "L2" }
           ].map((item, i) => (
             <div key={i} className="flex justify-between items-center pb-4 border-b border-white/5">
               <span className="text-on-surface-variant">{item.l}</span>
@@ -714,10 +723,10 @@ const MetricsView = () => (
         </div>
         <div className="grid grid-cols-2 gap-6">
           {[
-            { l: "Max Iter", v: "1000" },
-            { l: "Penalty", v: "l2" },
+            { l: "Max iter", v: "1000" },
+            { l: "Penalidad", v: "l2" },
             { l: "Solver", v: "lbfgs" },
-            { l: "C-Param", v: "1.0" }
+            { l: "Parámetro C", v: "1.0" }
           ].map((item, i) => (
             <div key={i} className="bg-surface-container-low/50 border border-white/10 rounded-2xl p-6">
               <span className="block font-mono text-[10px] text-on-surface-variant uppercase mb-2">{item.l}</span>
@@ -736,10 +745,10 @@ export default function App() {
   const [activeView, setActiveView] = useState<ViewId>('dashboard');
 
   const navItems = [
-    { id: 'dashboard', label: 'Home', icon: Network },
-    { id: 'audit', label: 'Audit', icon: ShieldCheck },
-    { id: 'simulate', label: 'Simulate', icon: Activity },
-    { id: 'metrics', label: 'Metrics', icon: BarChart3 },
+    { id: 'dashboard', label: 'Inicio', icon: Network },
+    { id: 'audit', label: 'Auditoría', icon: ShieldCheck },
+    { id: 'simulate', label: 'Simulador', icon: Activity },
+    { id: 'metrics', label: 'Métricas', icon: BarChart3 },
   ];
 
   return (
@@ -748,7 +757,7 @@ export default function App() {
       <header className="fixed top-0 w-full bg-surface-container/40 backdrop-blur-xl border-b border-white/15 h-16 z-50 flex items-center justify-between px-container-padding-mobile md:px-container-padding-desktop">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveView('dashboard')}>
           <Network className="w-7 h-7 text-primary" />
-          <span className="font-display text-xl font-bold tracking-tighter text-primary drop-shadow-[0_0_8px_rgba(192,193,255,0.4)]">NEURALIS LABS</span>
+          <span className="font-display text-xl font-bold tracking-tighter text-primary drop-shadow-[0_0_8px_rgba(192,193,255,0.4)]">NÍTIDO</span>
         </div>
         
         <nav className="hidden md:flex items-center gap-8 font-mono text-xs font-bold uppercase tracking-widest">
@@ -761,13 +770,12 @@ export default function App() {
               {item.label}
             </button>
           ))}
-          <button className="text-on-surface-variant hover:text-primary transition-colors">Assets</button>
         </nav>
 
         <div className="flex items-center gap-4">
-          <Search className="w-5 h-5 text-on-surface-variant hover:text-primary cursor-pointer transition-colors" />
-          <div className="w-9 h-9 rounded-full border border-primary/40 overflow-hidden">
-            <img src={IMAGES.profile} className="w-full h-full object-cover" alt="User" />
+          <div className="hidden sm:flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-primary">
+            <span className="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4cd7f6]" />
+            <span className="font-mono text-[10px] uppercase tracking-widest">Producción</span>
           </div>
         </div>
       </header>
@@ -782,7 +790,7 @@ export default function App() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            {activeView === 'dashboard' && <DashboardView />}
+            {activeView === 'dashboard' && <DashboardView onNavigate={setActiveView} />}
             {activeView === 'audit' && <AuditView />}
             {activeView === 'simulate' && <SimulatorView />}
             {activeView === 'metrics' && <MetricsView />}
