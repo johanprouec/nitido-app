@@ -96,6 +96,44 @@ const DEFAULT_CANDIDATE = VARIABLES_MODELO.reduce<Record<string, number>>((acc, 
 const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`;
 const formatNumber = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2);
 
+const buildPlainExplanation = (result: PredictionResult) => {
+  const positiveFactors = result.factores.filter((factor) => factor.impacto > 0).slice(0, 2);
+  const negativeFactors = result.factores.filter((factor) => factor.impacto < 0).slice(0, 2);
+  const distance = Math.abs(result.probabilidad - result.umbral);
+  const isClose = distance < 0.08;
+  const decisionText = result.prediccion === 1
+    ? `El candidato supera el umbral definido por el equipo: su probabilidad estimada es ${formatPercent(result.probabilidad)}, por encima del ${formatPercent(result.umbral)} requerido.`
+    : `El candidato queda por debajo del umbral definido por el equipo: su probabilidad estimada es ${formatPercent(result.probabilidad)}, menor al ${formatPercent(result.umbral)} requerido.`;
+
+  const confidenceText = isClose
+    ? 'Es un caso cercano al límite, por lo que conviene revisarlo manualmente antes de tomar una decisión definitiva.'
+    : result.prediccion === 1
+      ? 'La señal del modelo es suficientemente favorable para priorizarlo en la siguiente etapa.'
+      : 'La señal del modelo es débil frente al estándar usado para avanzar a entrevista.';
+
+  const positiveText = positiveFactors.length > 0
+    ? `Los factores que más ayudan en esta predicción son ${positiveFactors.map((factor) => factor.variable).join(' y ')}.`
+    : 'No hay factores positivos dominantes en esta predicción.';
+
+  const negativeText = negativeFactors.length > 0
+    ? `Los factores que más reducen la probabilidad son ${negativeFactors.map((factor) => factor.variable).join(' y ')}.`
+    : 'No hay factores negativos fuertes en esta predicción.';
+
+  const counterfactualText = result.contrafactual
+    ? `Como alternativa técnica, el modelo sugiere que mover ${result.contrafactual.variable} de ${formatNumber(result.contrafactual.valor_original)} a ${formatNumber(result.contrafactual.valor_sugerido)} llevaría la probabilidad aproximada a ${formatPercent(result.contrafactual.probabilidad_nueva)}.`
+    : result.prediccion === 1
+      ? 'No se propone contrafactual porque el candidato ya supera el umbral de avance.'
+      : 'No se encontró un cambio simple que lleve el caso por encima del umbral dentro de los rangos evaluados.';
+
+  return {
+    decisionText,
+    confidenceText,
+    positiveText,
+    negativeText,
+    counterfactualText,
+  };
+};
+
 // --- Assets ---
 const IMAGES = {
   hero: "https://lh3.googleusercontent.com/aida-public/AB6AXuBITTOAiVHNmmS40CjrByPDdO_OxMjbGQHFUxpLV32jZKaros_0izAvyLfqKKKfQOpKpl-4PQciLWY84nMQOTQM_G6jBnxzWKiXITifEWcKroMVMRpUQi3ATkV-j6jEJXRMk4Wvq_hsRGFNDM7SAQZz5P9Bevc20YX0Hbq93OGiem90NryDCMZV9Pt92swRAJGfXXhkUxMIVbJboq1M6UsYbznBtla-f-_4aR_GydWuECzEMyXwiih-pk8y2ZO3TJq_HwWwKKoZJd0",
@@ -506,82 +544,112 @@ const SimulatorView = () => {
         </div>
       )}
 
-      {result && (
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-          <div className="lg:col-span-4 glass-card rounded-xl p-8">
-            <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Resultado</span>
-            <h2 className={`text-4xl font-bold mt-3 ${result.prediccion === 1 ? 'text-tertiary' : 'text-error'}`}>
-              {result.estado}
-            </h2>
-            <div className="mt-6 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-on-surface-variant">Probabilidad de avanzar</span>
-                <span className="font-mono text-primary">{formatPercent(result.probabilidad)}</span>
-              </div>
-              <div className="w-full h-3 rounded-full bg-surface-container-highest overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${Math.min(result.probabilidad * 100, 100)}%` }} />
-              </div>
-              <div className="flex justify-between font-mono text-[10px] text-on-surface-variant uppercase">
-                <span>Umbral</span>
-                <span>{result.umbral.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
+      {result && (() => {
+        const plainExplanation = buildPlainExplanation(result);
 
-          <div className="lg:col-span-5 glass-card rounded-xl p-8">
-            <h3 className="text-2xl font-bold mb-6">Explicación local</h3>
-            <p className="text-sm text-on-surface-variant mb-5">
-              Impactos positivos aumentan la probabilidad de avanzar; impactos negativos la reducen.
-            </p>
-            <div className="space-y-3">
-              {result.factores.map((factor) => (
-                <div key={factor.variable} className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-mono uppercase">{factor.variable}</span>
-                    <span className={factor.impacto >= 0 ? 'text-tertiary' : 'text-error'}>
-                      {factor.impacto >= 0 ? '+' : ''}{factor.impacto.toFixed(3)}
-                    </span>
+        return (
+          <div className="space-y-gutter">
+            <section className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+              <div className="lg:col-span-4 glass-card rounded-xl p-8">
+                <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Resultado</span>
+                <h2 className={`text-4xl font-bold mt-3 ${result.prediccion === 1 ? 'text-tertiary' : 'text-error'}`}>
+                  {result.estado}
+                </h2>
+                <div className="mt-6 space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-on-surface-variant">Probabilidad de avanzar</span>
+                    <span className="font-mono text-primary">{formatPercent(result.probabilidad)}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-surface-container-highest overflow-hidden">
-                    <div
-                      className={factor.impacto >= 0 ? 'h-full bg-tertiary' : 'h-full bg-error'}
-                      style={{ width: `${Math.min(Math.abs(factor.impacto) * 70, 100)}%` }}
-                    />
+                  <div className="w-full h-3 rounded-full bg-surface-container-highest overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${Math.min(result.probabilidad * 100, 100)}%` }} />
+                  </div>
+                  <div className="flex justify-between font-mono text-[10px] text-on-surface-variant uppercase">
+                    <span>Umbral</span>
+                    <span>{result.umbral.toFixed(2)}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          <div className="lg:col-span-3 glass-card rounded-xl p-8">
-            <h3 className="text-2xl font-bold mb-4">Contrafactual</h3>
-            {result.contrafactual ? (
-              <div className="space-y-4 text-sm">
-                <p className="text-on-surface-variant">
-                  Cambiar <span className="text-primary font-mono">{result.contrafactual.variable}</span> podría mover el caso por encima del umbral.
+              <div className="lg:col-span-5 glass-card rounded-xl p-8">
+                <h3 className="text-2xl font-bold mb-6">Explicación local</h3>
+                <p className="text-sm text-on-surface-variant mb-5">
+                  Impactos positivos aumentan la probabilidad de avanzar; impactos negativos la reducen.
                 </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-surface-container-low/60 rounded-lg p-3">
-                    <span className="block font-mono text-[10px] uppercase text-on-surface-variant">Actual</span>
-                    <strong>{formatNumber(result.contrafactual.valor_original)}</strong>
-                  </div>
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
-                    <span className="block font-mono text-[10px] uppercase text-on-surface-variant">Sugerido</span>
-                    <strong>{formatNumber(result.contrafactual.valor_sugerido)}</strong>
-                  </div>
+                <div className="space-y-3">
+                  {result.factores.map((factor) => (
+                    <div key={factor.variable} className="space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-mono uppercase">{factor.variable}</span>
+                        <span className={factor.impacto >= 0 ? 'text-tertiary' : 'text-error'}>
+                          {factor.impacto >= 0 ? '+' : ''}{factor.impacto.toFixed(3)}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-surface-container-highest overflow-hidden">
+                        <div
+                          className={factor.impacto >= 0 ? 'h-full bg-tertiary' : 'h-full bg-error'}
+                          style={{ width: `${Math.min(Math.abs(factor.impacto) * 70, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <p className="font-mono text-[11px] text-tertiary">
-                  Nueva probabilidad: {formatPercent(result.contrafactual.probabilidad_nueva)}
+              </div>
+
+              <div className="lg:col-span-3 glass-card rounded-xl p-8">
+                <h3 className="text-2xl font-bold mb-4">Contrafactual</h3>
+                {result.contrafactual ? (
+                  <div className="space-y-4 text-sm">
+                    <p className="text-on-surface-variant">
+                      Cambiar <span className="text-primary font-mono">{result.contrafactual.variable}</span> podría mover el caso por encima del umbral.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-surface-container-low/60 rounded-lg p-3">
+                        <span className="block font-mono text-[10px] uppercase text-on-surface-variant">Actual</span>
+                        <strong>{formatNumber(result.contrafactual.valor_original)}</strong>
+                      </div>
+                      <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+                        <span className="block font-mono text-[10px] uppercase text-on-surface-variant">Sugerido</span>
+                        <strong>{formatNumber(result.contrafactual.valor_sugerido)}</strong>
+                      </div>
+                    </div>
+                    <p className="font-mono text-[11px] text-tertiary">
+                      Nueva probabilidad: {formatPercent(result.contrafactual.probabilidad_nueva)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-on-surface-variant text-sm">
+                    No se requiere contrafactual para candidatos que ya avanzan, o no se encontró un cambio simple dentro de los rangos evaluados.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className="glass-card rounded-xl p-8 border-primary/20">
+              <div className="flex items-center gap-3 mb-5">
+                <Monitor className="w-6 h-6 text-primary" />
+                <h3 className="text-2xl font-bold">Explicación en palabras simples</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm leading-relaxed">
+                <p className="bg-surface-container-low/60 border border-white/10 rounded-xl p-4 text-on-surface-variant">
+                  {plainExplanation.decisionText}
+                </p>
+                <p className="bg-surface-container-low/60 border border-white/10 rounded-xl p-4 text-on-surface-variant">
+                  {plainExplanation.confidenceText}
+                </p>
+                <p className="bg-surface-container-low/60 border border-white/10 rounded-xl p-4 text-on-surface-variant">
+                  {plainExplanation.positiveText}
+                </p>
+                <p className="bg-surface-container-low/60 border border-white/10 rounded-xl p-4 text-on-surface-variant">
+                  {plainExplanation.negativeText}
                 </p>
               </div>
-            ) : (
-              <p className="text-on-surface-variant text-sm">
-                No se requiere contrafactual para candidatos que ya avanzan, o no se encontró un cambio simple dentro de los rangos evaluados.
+              <p className="mt-4 text-sm text-on-surface-variant leading-relaxed bg-primary/10 border border-primary/20 rounded-xl p-4">
+                {plainExplanation.counterfactualText}
               </p>
-            )}
+            </section>
           </div>
-        </section>
-      )}
+        );
+      })()}
 
       <section className="glass-card rounded-xl p-6 border-secondary/20">
         <div className="flex items-start gap-3">
