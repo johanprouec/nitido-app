@@ -19,13 +19,10 @@ import {
   Activity,
   History,
   Settings2,
-  Plus,
   AlertCircle,
   TrendingUp,
   Cpu,
-  Fingerprint,
-  Maximize2,
-  FileDown
+  Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -329,6 +326,28 @@ const AuditView = () => (
         ))}
       </div>
     </section>
+
+    <section className="glass-card rounded-xl p-8 border-secondary/20">
+      <div className="flex items-center gap-3 mb-6">
+        <ShieldCheck className="text-secondary w-6 h-6" />
+        <h3 className="text-2xl font-bold">Recomendación final al CEO</h3>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: "Decisión", value: "Salida condicionada", tone: "text-primary" },
+          { label: "Riesgo principal", value: "Variables anonimizadas", tone: "text-error" },
+          { label: "Control requerido", value: "Revisión humana", tone: "text-tertiary" }
+        ].map((item) => (
+          <div key={item.label} className="bg-surface-container-low/60 border border-white/10 rounded-xl p-5">
+            <span className="block font-mono text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">{item.label}</span>
+            <strong className={`text-lg ${item.tone}`}>{item.value}</strong>
+          </div>
+        ))}
+      </div>
+      <p className="text-on-surface-variant leading-relaxed mt-6">
+        El modelo puede presentarse como prototipo funcional y explicable, pero no debería operar como sistema automático definitivo hasta validar el significado real de las variables, monitorear sesgos en producción y mantener una etapa de revisión humana para casos sensibles o cercanos al umbral.
+      </p>
+    </section>
   </div>
 );
 
@@ -628,10 +647,6 @@ const MetricsView = () => (
             <h2 className="text-2xl font-bold">Métricas de rendimiento</h2>
             <p className="text-sm text-on-surface-variant">Resumen visual para sustentación</p>
           </div>
-          <div className="flex gap-2">
-            <button className="bg-surface-container-highest p-2 rounded-lg hover:bg-surface-variant transition-colors border border-white/5"><FileDown className="w-5 h-5" /></button>
-            <button className="bg-primary/20 p-2 rounded-lg text-primary border border-primary/30 transition-colors"><Maximize2 className="w-5 h-5" /></button>
-          </div>
         </div>
         
         <div className="relative aspect-video flex items-end justify-between px-8 pb-10 border-b border-white/10">
@@ -811,15 +826,9 @@ export default function App() {
           </button>
         ))}
       </nav>
-
-      {/* Floating Action Button */}
-      <button className="fixed bottom-24 right-6 md:bottom-8 md:right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-[0_10px_40px_rgba(192,193,255,0.4)] flex items-center justify-center z-40 active:scale-95 transition-all">
-        <Plus className="w-8 h-8" />
-      </button>
     </div>
   );
 }
 
 // --- Icons used in the screenshots ---
 const ToggleRight = ({ className }: { className?: string }) => <Bolt className={className} />;
-const ChevronDown = ({ className }: { className?: string }) => <Plus className={`${className} rotate-45`} />;
