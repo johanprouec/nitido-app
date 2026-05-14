@@ -35,6 +35,73 @@ import { motion, AnimatePresence } from 'motion/react';
 // --- Types ---
 type ViewId = 'dashboard' | 'audit' | 'simulate' | 'metrics';
 
+type InputConfig =
+  | { tipo: 'continua'; min: number; max: number; default: number }
+  | { tipo: 'discreta' | 'binaria'; valores: number[]; default: number };
+
+type PredictionFactor = {
+  variable: string;
+  valor: number | null;
+  impacto: number;
+  direccion: 'aumenta' | 'disminuye';
+};
+
+type Counterfactual = {
+  variable: string;
+  valor_original: number;
+  valor_sugerido: number;
+  cambio_absoluto: number;
+  probabilidad_original: number;
+  probabilidad_nueva: number;
+};
+
+type PredictionResult = {
+  probabilidad: number;
+  prediccion: 0 | 1;
+  estado: string;
+  umbral: number;
+  factores: PredictionFactor[];
+  contrafactual: Counterfactual | null;
+};
+
+const VARIABLES_MODELO = [
+  'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9',
+  'x10', 'x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x18'
+] as const;
+
+const INPUT_CONFIG: Record<string, InputConfig> = {
+  x1: { tipo: 'continua', min: 0, max: 25, default: 3.5 },
+  x2: { tipo: 'continua', min: 7, max: 100, default: 65 },
+  x3: { tipo: 'discreta', valores: [1, 2, 3, 4, 5], default: 3 },
+  x4: { tipo: 'discreta', valores: [0, 1, 2, 3, 4, 5, 6, 7, 8], default: 2 },
+  x5: { tipo: 'binaria', valores: [0, 1], default: 1 },
+  x6: { tipo: 'continua', min: 22, max: 65, default: 35 },
+  x7: { tipo: 'discreta', valores: [1, 2, 3, 4, 5, 6], default: 3 },
+  x8: { tipo: 'discreta', valores: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], default: 3 },
+  x9: { tipo: 'discreta', valores: [0, 1, 2, 3], default: 1 },
+  x10: { tipo: 'continua', min: 3, max: 5, default: 3.8 },
+  x11: { tipo: 'continua', min: 0.1, max: 100, default: 51.4 },
+  x12: { tipo: 'discreta', valores: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], default: 3 },
+  x13: { tipo: 'discreta', valores: [0, 1, 2, 3], default: 2 },
+  x14: { tipo: 'continua', min: 0, max: 24, default: 2.7 },
+  x15: { tipo: 'continua', min: 1, max: 50, default: 8.3 },
+  x16: { tipo: 'continua', min: 0, max: 100, default: 50 },
+  x17: { tipo: 'binaria', valores: [0, 1], default: 1 },
+  x18: { tipo: 'discreta', valores: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], default: 3 },
+};
+
+const CONTINUOUS_VARIABLES = VARIABLES_MODELO.filter((variable) => INPUT_CONFIG[variable].tipo === 'continua');
+const DISCRETE_VARIABLES = VARIABLES_MODELO.filter((variable) => INPUT_CONFIG[variable].tipo === 'discreta');
+const BINARY_VARIABLES = VARIABLES_MODELO.filter((variable) => INPUT_CONFIG[variable].tipo === 'binaria');
+
+const DEFAULT_CANDIDATE = VARIABLES_MODELO.reduce<Record<string, number>>((acc, variable) => {
+  acc[variable] = INPUT_CONFIG[variable].default;
+  return acc;
+}, {});
+
+const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`;
+const formatNumber = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2);
+
 // --- Assets ---
 const IMAGES = {
   hero: "https://lh3.googleusercontent.com/aida-public/AB6AXuBITTOAiVHNmmS40CjrByPDdO_OxMjbGQHFUxpLV32jZKaros_0izAvyLfqKKKfQOpKpl-4PQciLWY84nMQOTQM_G6jBnxzWKiXITifEWcKroMVMRpUQi3ATkV-j6jEJXRMk4Wvq_hsRGFNDM7SAQZz5P9Bevc20YX0Hbq93OGiem90NryDCMZV9Pt92swRAJGfXXhkUxMIVbJboq1M6UsYbznBtla-f-_4aR_GydWuECzEMyXwiih-pk8y2ZO3TJq_HwWwKKoZJd0",
@@ -268,115 +335,237 @@ const AuditView = () => (
   </div>
 );
 
-const SimulatorView = () => (
-  <div className="space-y-8">
-    <div>
-      <h1 className="text-4xl font-bold mb-2">Simulador de candidato</h1>
-      <p className="text-on-surface-variant max-w-2xl">Ajuste os parâmetros neurais e variáveis comportamentais para gerar uma predição de alta fidelidade para o perfil do candidato.</p>
-    </div>
+const SimulatorView = () => {
+  const [candidate, setCandidate] = useState<Record<string, number>>(DEFAULT_CANDIDATE);
+  const [result, setResult] = useState<PredictionResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-      <section className="lg:col-span-8 glass-card rounded-xl p-8 space-y-8">
-        <div className="flex items-center gap-2 mb-2">
-          <Activity className="text-tertiary w-6 h-6" />
-          <h2 className="text-2xl font-bold text-primary">Contínuas</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-          {[
-            { label: "Variável x1", val: "85.4%" },
-            { label: "Variável x2", val: "42.1%" },
-            { label: "Variável x6", val: "12.0" },
-            { label: "Variável x10", val: "0.95" },
-            { label: "Variável x11", val: "234ms" },
-            { label: "Variável x14", val: "High" },
-            { label: "Variável x15", val: "Stable" },
-            { label: "Variável x16", val: "0.02" }
-          ].map((item, i) => (
-            <div key={i} className="space-y-3">
-              <div className="flex justify-between items-center font-mono text-xs uppercase tracking-wider">
-                <label className="text-on-surface">{item.label}</label>
-                <span className="text-primary">{item.val}</span>
-              </div>
-              <input 
-                type="range" 
-                className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none accent-primary" 
-              />
-            </div>
+  const updateCandidate = (variable: string, value: number) => {
+    setCandidate((current) => ({ ...current, [variable]: value }));
+  };
+
+  const runPrediction = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(candidate),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detalle || data.error || 'No fue posible calcular la predicción.');
+      }
+
+      setResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error inesperado al consultar el modelo.');
+      setResult(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderSelect = (variable: string) => {
+    const config = INPUT_CONFIG[variable];
+    if (config.tipo === 'continua') return null;
+
+    return (
+      <label key={variable} className="space-y-2">
+        <span className="font-mono text-[10px] text-on-surface-variant uppercase">{variable}</span>
+        <select
+          value={candidate[variable]}
+          onChange={(event) => updateCandidate(variable, Number(event.target.value))}
+          className="w-full bg-surface-container-highest/70 border border-white/10 rounded-lg py-2 px-3 text-sm outline-none focus:border-primary"
+        >
+          {config.valores.map((value) => (
+            <option key={value} value={value} className="bg-surface text-on-surface">
+              {formatNumber(value)}
+            </option>
           ))}
-        </div>
-      </section>
+        </select>
+      </label>
+    );
+  };
 
-      <aside className="lg:col-span-4 space-y-gutter">
-        <section className="glass-card rounded-xl p-8">
-          <div className="flex items-center gap-2 mb-6">
-            <ToggleRight className="text-secondary w-6 h-6" />
-            <h2 className="text-2xl font-bold text-secondary">Binarias</h2>
-          </div>
-          <div className="space-y-6">
-            {["Variável x5", "Variável x17"].map((label, i) => (
-              <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-surface-container-low/50 border border-white/5">
-                <span className="font-mono text-xs uppercase font-bold">{label}</span>
-                <div className={`w-12 h-6 rounded-full relative p-1 cursor-pointer transition-colors ${i === 0 ? "bg-primary/20 border border-primary/40" : "bg-surface-container-highest border border-white/10"}`}>
-                  <div className={`w-4 h-4 rounded-full transition-all ${i === 0 ? "bg-primary translate-x-6 shadow-[0_0_10px_rgba(192,193,255,1)]" : "bg-on-surface-variant translate-x-0"}`} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="glass-card rounded-xl p-8">
-          <div className="flex items-center gap-2 mb-6">
-            <Database className="text-tertiary w-6 h-6" />
-            <h2 className="text-2xl font-bold text-tertiary">Discretas</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {["x3", "x4", "x7", "x8"].map((l, i) => (
-              <div key={i} className="space-y-1">
-                <label className="font-mono text-[10px] text-on-surface-variant uppercase">{l}</label>
-                <div className="w-full bg-surface-container-highest/60 border border-white/10 rounded-lg py-2 px-3 text-xs flex justify-between items-center cursor-pointer">
-                  <span>{i === 0 ? "Cat_A" : i === 1 ? "Level_1" : i === 2 ? "Type_0" : "Phase_X"}</span>
-                  <ChevronDown className="w-3 h-3 opacity-50" />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 pt-4 border-t border-white/5 flex justify-between items-center">
-             <span className="font-mono text-[10px] text-on-surface-variant uppercase">x9, x12, x13, x18</span>
-             <button className="text-primary text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-white/5 p-2 rounded">
-               Edit All <Plus className="w-3 h-3" />
-             </button>
-          </div>
-        </section>
-      </aside>
-    </div>
-
-    <motion.div 
-      whileHover={{ scale: 1.01 }}
-      className="flex flex-col md:flex-row items-center justify-between glass-card p-10 rounded-2xl gap-8"
-    >
-      <div className="flex items-center gap-6">
-        <div className="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center border border-primary/30">
-          <Cpu className="text-primary w-8 h-8" />
-        </div>
-        <div>
-          <h3 className="text-2xl font-bold">Pronto para processar?</h3>
-          <p className="text-on-surface-variant">O motor de inferência utilizará o modelo v4.2 para esta simulação.</p>
-        </div>
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-4xl font-bold mb-2">Simulador de candidato</h1>
+        <p className="text-on-surface-variant max-w-3xl">
+          Ingresa las variables anonimizadas del candidato. El modelo usa el umbral 0.45 para decidir si avanza a entrevista.
+        </p>
       </div>
-      <button className="w-full md:w-auto px-12 py-5 rounded-2xl bg-gradient-to-r from-primary-container to-secondary-container font-display text-xl font-bold text-on-primary-fixed shadow-[0_10px_30px_rgba(128,131,255,0.4)] active:scale-95 transition-all flex items-center justify-center gap-3">
-        Calcular predicción <Bolt className="w-6 h-6 fill-on-primary-fixed" />
-      </button>
-    </motion.div>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter opacity-40">
-      {[IMAGES.circuit, IMAGES.neural, IMAGES.globe].map((src, i) => (
-        <div key={i} className="h-32 rounded-2xl overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all cursor-crosshair">
-          <img src={src} className="w-full h-full object-cover" alt="context" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+        <section className="lg:col-span-8 glass-card rounded-xl p-8 space-y-8">
+          <div className="flex items-center gap-2 mb-2">
+            <Activity className="text-tertiary w-6 h-6" />
+            <h2 className="text-2xl font-bold text-primary">Variables continuas</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            {CONTINUOUS_VARIABLES.map((variable) => {
+              const config = INPUT_CONFIG[variable];
+              if (config.tipo !== 'continua') return null;
+              const step = Math.max((config.max - config.min) / 100, 0.01);
+
+              return (
+                <div key={variable} className="space-y-3">
+                  <div className="flex justify-between items-center font-mono text-xs uppercase tracking-wider">
+                    <label className="text-on-surface">{variable}</label>
+                    <span className="text-primary">{formatNumber(candidate[variable])}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={config.min}
+                    max={config.max}
+                    step={step}
+                    value={candidate[variable]}
+                    onChange={(event) => updateCandidate(variable, Number(event.target.value))}
+                    className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none accent-primary"
+                  />
+                  <div className="flex justify-between font-mono text-[10px] text-on-surface-variant">
+                    <span>{formatNumber(config.min)}</span>
+                    <span>{formatNumber(config.max)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <aside className="lg:col-span-4 space-y-gutter">
+          <section className="glass-card rounded-xl p-8">
+            <div className="flex items-center gap-2 mb-6">
+              <ToggleRight className="text-secondary w-6 h-6" />
+              <h2 className="text-2xl font-bold text-secondary">Binarias</h2>
+            </div>
+            <div className="space-y-4">
+              {BINARY_VARIABLES.map(renderSelect)}
+            </div>
+          </section>
+
+          <section className="glass-card rounded-xl p-8">
+            <div className="flex items-center gap-2 mb-6">
+              <Database className="text-tertiary w-6 h-6" />
+              <h2 className="text-2xl font-bold text-tertiary">Discretas</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {DISCRETE_VARIABLES.map(renderSelect)}
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <motion.div
+        whileHover={{ scale: 1.01 }}
+        className="flex flex-col lg:flex-row items-stretch justify-between glass-card p-8 rounded-2xl gap-8"
+      >
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center border border-primary/30 shrink-0">
+            <Cpu className="text-primary w-8 h-8" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold">Inferencia del modelo NÍTIDO</h3>
+            <p className="text-on-surface-variant">Regresión logística con preprocesamiento exportado desde Colab.</p>
+          </div>
         </div>
-      ))}
+        <button
+          onClick={runPrediction}
+          disabled={isLoading}
+          className="w-full lg:w-auto px-10 py-5 rounded-2xl bg-gradient-to-r from-primary-container to-secondary-container font-display text-xl font-bold text-on-primary shadow-[0_10px_30px_rgba(128,131,255,0.4)] disabled:opacity-60 active:scale-95 transition-all flex items-center justify-center gap-3"
+        >
+          {isLoading ? 'Calculando...' : 'Calcular predicción'} <Bolt className="w-6 h-6 fill-on-primary" />
+        </button>
+      </motion.div>
+
+      {error && (
+        <div className="glass-card rounded-xl p-6 border-error/40 text-error flex items-center gap-3">
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {result && (
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+          <div className="lg:col-span-4 glass-card rounded-xl p-8">
+            <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Resultado</span>
+            <h2 className={`text-4xl font-bold mt-3 ${result.prediccion === 1 ? 'text-tertiary' : 'text-error'}`}>
+              {result.estado}
+            </h2>
+            <div className="mt-6 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-on-surface-variant">Probabilidad de avanzar</span>
+                <span className="font-mono text-primary">{formatPercent(result.probabilidad)}</span>
+              </div>
+              <div className="w-full h-3 rounded-full bg-surface-container-highest overflow-hidden">
+                <div className="h-full bg-primary" style={{ width: `${Math.min(result.probabilidad * 100, 100)}%` }} />
+              </div>
+              <div className="flex justify-between font-mono text-[10px] text-on-surface-variant uppercase">
+                <span>Umbral</span>
+                <span>{result.umbral.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 glass-card rounded-xl p-8">
+            <h3 className="text-2xl font-bold mb-6">Explicación local</h3>
+            <div className="space-y-3">
+              {result.factores.map((factor) => (
+                <div key={factor.variable} className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-mono uppercase">{factor.variable}</span>
+                    <span className={factor.impacto >= 0 ? 'text-tertiary' : 'text-error'}>
+                      {factor.impacto >= 0 ? '+' : ''}{factor.impacto.toFixed(3)}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-surface-container-highest overflow-hidden">
+                    <div
+                      className={factor.impacto >= 0 ? 'h-full bg-tertiary' : 'h-full bg-error'}
+                      style={{ width: `${Math.min(Math.abs(factor.impacto) * 70, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="lg:col-span-3 glass-card rounded-xl p-8">
+            <h3 className="text-2xl font-bold mb-4">Contrafactual</h3>
+            {result.contrafactual ? (
+              <div className="space-y-4 text-sm">
+                <p className="text-on-surface-variant">
+                  Cambiar <span className="text-primary font-mono">{result.contrafactual.variable}</span> podría llevar el caso a avanzar.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-surface-container-low/60 rounded-lg p-3">
+                    <span className="block font-mono text-[10px] uppercase text-on-surface-variant">Actual</span>
+                    <strong>{formatNumber(result.contrafactual.valor_original)}</strong>
+                  </div>
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+                    <span className="block font-mono text-[10px] uppercase text-on-surface-variant">Sugerido</span>
+                    <strong>{formatNumber(result.contrafactual.valor_sugerido)}</strong>
+                  </div>
+                </div>
+                <p className="font-mono text-[11px] text-tertiary">
+                  Nueva probabilidad: {formatPercent(result.contrafactual.probabilidad_nueva)}
+                </p>
+              </div>
+            ) : (
+              <p className="text-on-surface-variant text-sm">
+                No se requiere contrafactual para candidatos que ya avanzan, o no se encontró un cambio simple dentro de los rangos evaluados.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const MetricsView = () => (
   <div className="space-y-10">
@@ -626,4 +815,3 @@ export default function App() {
 // --- Icons used in the screenshots ---
 const ToggleRight = ({ className }: { className?: string }) => <Bolt className={className} />;
 const ChevronDown = ({ className }: { className?: string }) => <Plus className={`${className} rotate-45`} />;
-
