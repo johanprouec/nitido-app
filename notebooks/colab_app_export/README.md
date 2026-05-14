@@ -14,6 +14,7 @@ La app permite ingresar los valores de un candidato nuevo y obtener:
 ## Modelo utilizado
 
 El modelo final seleccionado fue una regresión logística baseline, debido a que presentó el mejor equilibrio entre desempeño, interpretabilidad y facilidad de auditoría.
+El único modelo exportado como artefacto final en esta versión es `modelo_nitido.pkl`.
 
 ## Umbral de decisión
 
@@ -22,7 +23,7 @@ El umbral utilizado es 0.45, seleccionado porque mejora el F1-score y reduce fal
 ## Archivos principales
 
 - `app.py`: aplicación principal en Streamlit.
-- `modelo_nitido.pkl`: pipeline entrenado del modelo final.
+- `modelo_nitido.pkl`: pipeline sklearn entrenado de la regresión logística baseline final.
 - `metadata.json`: configuración de variables y umbral.
 - `X_train_referencia.csv`: datos de referencia para SHAP y contrafactuales.
 - `requirements.txt`: librerías necesarias para ejecutar la app.

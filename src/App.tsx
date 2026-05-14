@@ -190,9 +190,52 @@ const SAMPLE_CASES: Record<string, Record<string, number>> = {
 };
 
 const MODEL_COMPARISON = [
-  { model: 'Regresión logística', f1: '0.72', auc: '0.81' },
-  { model: 'Random Forest', f1: '0.76', auc: '0.84' },
-  { model: 'XGBoost', f1: '0.78', auc: '0.86' },
+  { model: 'Regresión logística baseline', accuracy: '0.7600', precision: '0.7626', recall: '0.7199', f1: '0.7406', auc: '0.8298' },
+  { model: 'Random Forest', accuracy: '0.7307', precision: '0.7341', recall: '0.6807', f1: '0.7064', auc: '0.8044' },
+  { model: 'Gradient Boosting', accuracy: '0.7467', precision: '0.7538', recall: '0.6947', f1: '0.7230', auc: '0.8117' },
+];
+
+const TUNED_MODEL_COMPARISON = [
+  { model: 'Regresión logística ajustada', accuracy: '0.7333', precision: '0.7116', recall: '0.7395', f1: '0.7253', auc: '0.8186' },
+  { model: 'Random Forest ajustado', accuracy: '0.7440', precision: '0.7391', recall: '0.7143', f1: '0.7265', auc: '0.8070' },
+  { model: 'Gradient Boosting ajustado', accuracy: '0.7467', precision: '0.7463', recall: '0.7087', f1: '0.7270', auc: '0.8168' },
+];
+
+const THRESHOLD_COMPARISON = [
+  { threshold: '0.50', accuracy: '0.7600', precision: '0.7626', recall: '0.7199', f1: '0.7406', auc: '0.8298', fp: '80', fn: '100' },
+  { threshold: '0.45', accuracy: '0.7613', precision: '0.7405', recall: '0.7675', f1: '0.7538', auc: '0.8298', fp: '96', fn: '83' },
+];
+
+const TEST_METRICS = [
+  { l: 'Exactitud', v: 73, label: '0.7267', color: 'primary' },
+  { l: 'Precisión', v: 70, label: '0.6951', color: 'secondary' },
+  { l: 'Sensibilidad', v: 76, label: '0.7556', color: 'tertiary' },
+  { l: 'F1', v: 72, label: '0.7241', color: 'primary' },
+  { l: 'AUC', v: 81, label: '0.8056', color: 'secondary' },
+];
+
+const SHAP_GLOBAL = [
+  { variable: 'x1', value: 0.9282 },
+  { variable: 'x2', value: 0.7725 },
+  { variable: 'x5', value: 0.4553 },
+  { variable: 'x9', value: 0.3551 },
+  { variable: 'x7', value: 0.3147 },
+  { variable: 'x10', value: 0.2970 },
+  { variable: 'x4', value: 0.2944 },
+  { variable: 'x3', value: 0.2533 },
+  { variable: 'x14', value: 0.2289 },
+];
+
+const PERMUTATION_IMPORTANCE = [
+  { variable: 'x1', value: 0.1171 },
+  { variable: 'x2', value: 0.0936 },
+  { variable: 'x5', value: 0.0242 },
+  { variable: 'x9', value: 0.0202 },
+  { variable: 'x3', value: 0.0193 },
+  { variable: 'x4', value: 0.0190 },
+  { variable: 'x7', value: 0.0130 },
+  { variable: 'x14', value: 0.0126 },
+  { variable: 'x10', value: 0.0103 },
 ];
 
 const CEO_TALKING_POINTS = [
@@ -214,10 +257,6 @@ const CEO_TALKING_POINTS = [
   },
 ];
 
-const ROC_POINTS = [
-  [0, 0], [0.05, 0.12], [0.1, 0.25], [0.18, 0.38], [0.28, 0.53], [0.38, 0.68], [0.48, 0.78], [0.58, 0.86], [0.72, 0.93], [1, 1],
-];
-
 const COMPLIANCE_ACTIONS = [
   { phase: 'Fase 1', action: 1, title: 'EDA visual con hallazgos explícitos', evidence: 'Distribuciones, rangos, tipos de variables y diferencias por clase documentadas en el cuadernillo.' },
   { phase: 'Fase 1', action: 2, title: 'Calidad de datos', evidence: 'NAs, outliers y desbalance revisados; decisiones de tratamiento justificadas.' },
@@ -226,7 +265,7 @@ const COMPLIANCE_ACTIONS = [
   { phase: 'Fase 2', action: 5, title: 'Estandarización/codificación', evidence: 'Pipeline con transformaciones consistentes para variables continuas, discretas y binarias.' },
   { phase: 'Fase 2', action: 6, title: 'Desbalance de clases', evidence: 'Balance de clases revisado y decisión metodológica explicada.' },
   { phase: 'Fase 2', action: 7, title: 'Baseline interpretable', evidence: 'Regresión logística como referencia explicable.' },
-  { phase: 'Fase 2', action: 8, title: 'Modelos complejos competidores', evidence: 'Random Forest y XGBoost comparados frente al baseline.' },
+  { phase: 'Fase 2', action: 8, title: 'Modelos complejos competidores', evidence: 'Random Forest y Gradient Boosting comparados frente al baseline.' },
   { phase: 'Fase 2', action: 9, title: 'Búsqueda de hiperparámetros', evidence: 'Grilla y validación cruzada documentadas en el cuadernillo técnico.' },
   { phase: 'Fase 2', action: 10, title: 'Elección razonada del modelo final', evidence: 'Decisión basada en desempeño, explicabilidad y riesgo regulatorio.' },
   { phase: 'Fase 3', action: 11, title: 'Métrica principal justificada', evidence: 'F1 elegido por balance entre precisión y sensibilidad.' },
@@ -480,8 +519,8 @@ const DashboardView = ({ onNavigate }: { onNavigate: (view: ViewId) => void }) =
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'AUC', value: '0.80', color: 'primary' },
-                  { label: 'F1', value: '0.72', color: 'tertiary' },
+                  { label: 'AUC test', value: '0.8056', color: 'primary' },
+                  { label: 'F1 test', value: '0.7241', color: 'tertiary' },
                   { label: 'Umbral', value: '0.45', color: 'secondary' },
                   { label: 'Candidatos', value: '5.000', color: 'primary' },
                 ].map((tile) => (
@@ -574,27 +613,35 @@ const AuditView = ({ onNavigate }: { onNavigate: (view: ViewId) => void }) => (
         <div className="rounded-3xl border border-white/10 bg-surface-container-low/60 p-6">
           <h3 className="text-xl font-bold mb-4">SHAP global</h3>
           <div className="space-y-3">
-            {['x2', 'x11', 'x16', 'x4', 'x7', 'x10'].map((variable, index) => (
-              <div key={variable} className="space-y-2">
+            {SHAP_GLOBAL.slice(0, 6).map((item) => (
+              <div key={item.variable} className="space-y-2">
                 <div className="flex justify-between text-sm font-medium">
-                  <span>{variable}</span>
-                  <span>{(0.18 - index * 0.02).toFixed(2)}</span>
+                  <span>{item.variable}</span>
+                  <span>{item.value.toFixed(4)}</span>
                 </div>
                 <div className="h-3 rounded-full bg-surface-container-highest overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${80 - index * 10}%` }}></div>
+                  <div className="h-full bg-primary" style={{ width: `${Math.max(18, (item.value / SHAP_GLOBAL[0].value) * 100)}%` }}></div>
                 </div>
               </div>
             ))}
           </div>
           <p className="mt-5 text-sm text-on-surface-variant">
-            Importancia global aproximada del modelo: las variables x2, x11 y x16 son las que más impacto tienen en la mayoría de las predicciones.
+            Importancia global SHAP real del modelo: x1, x2, x5, x9, x7 y x10 lideran las contribuciones absolutas medias. x14 también es crítica por su efecto negativo.
           </p>
         </div>
 
         <div className="rounded-3xl border border-white/10 bg-surface-container-low/60 p-6">
-          <h3 className="text-xl font-bold mb-4">Resumen ejecutivo</h3>
-          <p className="text-sm text-on-surface-variant leading-relaxed">
-            Esta auditoría separa claramente lo que debe comunicarse a la cúpula de lo que es seguimiento interno del proyecto. El CEO recibe una recomendación directa; la gestión interna queda en la parte posterior.
+          <h3 className="text-xl font-bold mb-4">Permutation Importance</h3>
+          <div className="space-y-3">
+            {PERMUTATION_IMPORTANCE.slice(0, 5).map((item) => (
+              <div key={item.variable} className="flex items-center justify-between rounded-2xl border border-white/10 bg-surface-container/50 px-4 py-3 text-sm">
+                <span className="font-semibold">{item.variable}</span>
+                <span className="font-mono text-primary">{item.value.toFixed(4)}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-sm text-on-surface-variant leading-relaxed">
+            Permutation Importance confirma a x1 y x2 como señales dominantes. Por su peso global, x1, x2 y x14 quedan como variables críticas para auditoría de proxy sensible.
           </p>
         </div>
       </div>
@@ -1175,8 +1222,8 @@ const SimulatorView = () => {
 const METRIC_GUIDE = [
   {
     title: 'Umbral operativo 0.45',
-    body: 'El umbral convierte la probabilidad del modelo en una decisión: si la probabilidad es igual o superior a 0.45, el candidato queda priorizado para avanzar. Se usa 0.45 en lugar de 0.50 porque en prefiltrado conviene no perder candidatos potencialmente buenos por un corte demasiado estricto.',
-    interpretation: 'Interpretación: es un punto de equilibrio entre oportunidad y control. Los casos apenas por encima o por debajo del umbral no deben automatizarse; entran a revisión humana.',
+    body: 'El umbral convierte la probabilidad del modelo en una decisión: si la probabilidad es igual o superior a 0.45, el candidato queda priorizado para avanzar. Se usa 0.45 en lugar de 0.50 porque en validación mejora F1 de 0.7406 a 0.7538, aumenta recall de 0.7199 a 0.7675 y reduce falsos negativos de 100 a 83.',
+    interpretation: 'Interpretación: se aceptan más falsos positivos, de 80 a 96, para revisar algunos candidatos adicionales y evitar descartar perfiles potencialmente buenos. Los casos cercanos al umbral entran a revisión humana.',
   },
   {
     title: 'F1-score test 0.7241',
@@ -1190,8 +1237,8 @@ const METRIC_GUIDE = [
   },
   {
     title: 'Matriz de confusión',
-    body: 'La matriz aterriza los errores: verdaderos positivos son candidatos correctamente priorizados; falsos positivos avanzan sin corresponder; falsos negativos son candidatos valiosos que el modelo dejaría por fuera; verdaderos negativos son descartes correctos.',
-    interpretation: 'Interpretación: los falsos negativos son especialmente sensibles en selección de talento, porque implican perder oportunidades. Por eso se justifica el umbral 0.45 y la revisión manual en zona cercana.',
+    body: 'La matriz test del modelo final con umbral 0.45 fue: 276 verdaderos negativos, 118 falsos positivos, 87 falsos negativos y 269 verdaderos positivos.',
+    interpretation: 'Interpretación: los falsos negativos siguen siendo el error más sensible en selección de talento, porque implican perder oportunidades. Por eso se justifica el umbral 0.45 y la revisión manual en zona cercana.',
   },
 ];
 
@@ -1206,8 +1253,8 @@ const MetricsView = () => (
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {[
-        { label: "Modelo final", val: "Regresión logística", meta: "Pipeline sklearn", icon: Cpu },
-        { label: "Umbral", val: "0.45", progress: true, color: "secondary" },
+        { label: "Modelo final", val: "Regresión logística baseline", meta: "Artefacto: models/modelo_nitido.pkl", icon: Cpu },
+        { label: "Pipeline", val: "sklearn", meta: "Umbral operativo: 0.45", progress: true, color: "secondary" },
         { label: "F1-score test", val: "0.7241", trend: "Métrica principal", icon: BarChart3, color: "tertiary" },
         { label: "AUC test", val: "0.8056", validated: true, color: "primary" }
       ].map((m, i) => (
@@ -1287,7 +1334,7 @@ const MetricsView = () => (
       </div>
       <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/10 p-5">
         <p className="text-sm font-semibold leading-relaxed text-on-surface">
-          Frase de cierre sugerida: “El modelo ya aporta valor como filtro explicable y trazable; la decisión responsable es usarlo para priorizar revisión humana, medir sesgos y madurarlo antes de automatizar.”
+          Frase de cierre sugerida: “El modelo ya aporta valor como filtro explicable y trazable; la decisión responsable es usarlo para priorizar revisión humana, medir sesgos y madurarlo antes de considerar producción plena.”
         </p>
       </div>
     </section>
@@ -1297,7 +1344,7 @@ const MetricsView = () => (
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl font-bold">Métricas de rendimiento</h2>
-            <p className="text-sm text-on-surface-variant">Resumen visual para comité e interpretación ejecutiva</p>
+            <p className="text-sm text-on-surface-variant">Métricas finales en test del modelo final con umbral 0.45</p>
           </div>
         </div>
 
@@ -1307,13 +1354,7 @@ const MetricsView = () => (
               <div key={l} className="w-full border-t border-on-surface" />
             ))}
           </div>
-          {[
-            { l: 'Exactitud', v: 85, color: 'primary' },
-            { l: 'Precisión', v: 78, color: 'secondary' },
-            { l: 'Sensibilidad', v: 68, color: 'tertiary' },
-            { l: 'F1', v: 72, color: 'primary' },
-            { l: 'AUC', v: 81, color: 'secondary' }
-          ].map((bar, i) => (
+          {TEST_METRICS.map((bar, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-3 sm:gap-4 min-w-0">
               <div className="relative w-9 sm:w-14 md:w-16 rounded-t-xl overflow-hidden" style={{ height: `${bar.v}%`, minHeight: 44 }}>
                 <div style={{ position: 'absolute', inset: 0, backgroundColor: toRgba(COLOR_MAP[bar.color], 0.18) }} />
@@ -1325,7 +1366,7 @@ const MetricsView = () => (
                 />
               </div>
               <span className="font-mono text-[9px] sm:text-[10px] text-on-surface-variant uppercase tracking-widest text-center break-words">{bar.l}</span>
-              <span className="text-sm font-semibold" style={{ color: COLOR_MAP[bar.color] }}>{bar.v}%</span>
+              <span className="text-sm font-semibold" style={{ color: COLOR_MAP[bar.color] }}>{bar.label}</span>
             </div>
           ))}
         </div>
@@ -1350,7 +1391,7 @@ const MetricsView = () => (
                 <line x1="132" y1="195" x2="132" y2="15" stroke={COLOR_MAP.tertiary} strokeWidth="2" strokeDasharray="4 4" />
                 <circle cx="132" cy="75" r="4" fill={COLOR_MAP.tertiary} />
                 <text x="132" y="210" fill="#999" fontSize="10" textAnchor="middle">Umbral 0.45</text>
-                <text x="230" y="45" fill="#f8fafc" fontSize="11">AUC 0.80</text>
+                <text x="210" y="45" fill="#f8fafc" fontSize="11">AUC test: 0.8056</text>
               </svg>
             </div>
             <p className="mt-4 text-sm text-on-surface-variant">
@@ -1361,9 +1402,44 @@ const MetricsView = () => (
           <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-surface-container-low/60 p-5 sm:p-6">
             <div className="flex items-center gap-3 mb-4">
               <BarChart3 className="text-secondary w-5 h-5" />
-              <h3 className="text-lg font-bold">Comparación de modelos</h3>
+              <h3 className="text-lg font-bold">Comparación inicial de modelos</h3>
             </div>
             <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-separate border-spacing-y-3">
+                <thead>
+                  <tr>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">Modelo</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">Accuracy</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">Precision</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">Recall</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">F1</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">AUC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {MODEL_COMPARISON.map((row) => (
+                    <tr key={row.model} className="bg-surface-container-highest rounded-3xl border border-white/10">
+                      <td className="px-4 py-4 font-medium">{row.model}</td>
+                      <td className="px-4 py-4">{row.accuracy}</td>
+                      <td className="px-4 py-4">{row.precision}</td>
+                      <td className="px-4 py-4">{row.recall}</td>
+                      <td className="px-4 py-4">{row.f1}</td>
+                      <td className="px-4 py-4">{row.auc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-4 text-sm text-on-surface-variant">
+              La regresión logística baseline fue seleccionada como modelo final porque obtuvo el mejor equilibrio entre desempeño predictivo e interpretabilidad. En validación presentó el mayor F1-score y el mayor AUC frente a Random Forest y Gradient Boosting. Además, permite explicar mejor la dirección de los efectos, justificar el umbral operativo y auditar las decisiones del sistema, algo clave en un proceso de selección de candidatos.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-surface-container-low/60 p-5 sm:p-6">
+            <h3 className="text-lg font-bold">Modelos después de ajuste</h3>
+            <div className="mt-4 overflow-x-auto">
               <table className="w-full text-left text-sm border-separate border-spacing-y-3">
                 <thead>
                   <tr>
@@ -1373,7 +1449,7 @@ const MetricsView = () => (
                   </tr>
                 </thead>
                 <tbody>
-                  {MODEL_COMPARISON.map((row) => (
+                  {TUNED_MODEL_COMPARISON.map((row) => (
                     <tr key={row.model} className="bg-surface-container-highest rounded-3xl border border-white/10">
                       <td className="px-4 py-4 font-medium">{row.model}</td>
                       <td className="px-4 py-4">{row.f1}</td>
@@ -1383,8 +1459,36 @@ const MetricsView = () => (
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-surface-container-low/60 p-5 sm:p-6">
+            <h3 className="text-lg font-bold">Optimización de umbral</h3>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-left text-sm border-separate border-spacing-y-3">
+                <thead>
+                  <tr>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">Umbral</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">F1</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">Recall</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">FP</th>
+                    <th className="pb-3 text-on-surface-variant uppercase tracking-[0.25em]">FN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {THRESHOLD_COMPARISON.map((row) => (
+                    <tr key={row.threshold} className="bg-surface-container-highest rounded-3xl border border-white/10">
+                      <td className="px-4 py-4 font-medium">{row.threshold}</td>
+                      <td className="px-4 py-4">{row.f1}</td>
+                      <td className="px-4 py-4">{row.recall}</td>
+                      <td className="px-4 py-4">{row.fp}</td>
+                      <td className="px-4 py-4">{row.fn}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <p className="mt-4 text-sm text-on-surface-variant">
-              La comparación muestra que modelos más complejos pueden subir F1 y AUC, pero la regresión logística se conserva como modelo final por interpretabilidad, estabilidad y facilidad de explicación ante negocio. Es una decisión razonable si la prioridad es transparencia.
+              El umbral 0.45 reduce falsos negativos de 100 a 83 y aumenta recall, a cambio de revisar más falsos positivos.
             </p>
           </div>
         </div>
@@ -1395,32 +1499,32 @@ const MetricsView = () => (
         <div className="grid grid-cols-2 gap-3 mb-10">
           <div className="bg-primary/20 border border-primary/30 p-6 rounded-2xl flex flex-col items-center justify-center">
             <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Verd. neg.</span>
-            <span className="text-4xl font-bold text-primary">482</span>
+            <span className="text-4xl font-bold text-primary">276</span>
           </div>
           <div className="bg-surface-container-high border border-white/5 p-6 rounded-2xl flex flex-col items-center justify-center opacity-60">
             <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Falso pos.</span>
-            <span className="text-4xl font-bold">54</span>
+            <span className="text-4xl font-bold">118</span>
           </div>
           <div className="bg-surface-container-high border border-white/5 p-6 rounded-2xl flex flex-col items-center justify-center opacity-60">
             <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Falso neg.</span>
-            <span className="text-4xl font-bold">112</span>
+            <span className="text-4xl font-bold">87</span>
           </div>
           <div className="bg-secondary/20 border border-secondary/30 p-6 rounded-2xl flex flex-col items-center justify-center">
             <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Verd. pos.</span>
-            <span className="text-4xl font-bold text-secondary">298</span>
+            <span className="text-4xl font-bold text-secondary">269</span>
           </div>
         </div>
         <div className="space-y-4">
           <div className="flex justify-between font-mono text-[10px] uppercase">
             <span className="text-on-surface-variant">Balance de clases</span>
-            <span className="text-on-surface">62% / 38%</span>
+            <span className="text-on-surface">53% / 47%</span>
           </div>
           <div className="w-full h-2 rounded-full overflow-hidden flex shadow-inner border border-white/5">
-            <div className="h-full bg-primary w-[62%]"></div>
-            <div className="h-full bg-secondary w-[38%]"></div>
+            <div className="h-full bg-primary w-[53%]"></div>
+            <div className="h-full bg-secondary w-[47%]"></div>
           </div>
           <p className="text-sm leading-relaxed text-on-surface-variant">
-            Lectura rápida: el modelo acierta una parte importante de los casos, pero los 112 falsos negativos son el riesgo principal porque representan candidatos que pudieron avanzar y fueron descartados. Por eso la app no debe tomar decisiones finales sola.
+            Lectura rápida: en test, el modelo final con umbral 0.45 obtuvo 87 falsos negativos y 118 falsos positivos. Los falsos negativos siguen siendo el riesgo principal porque representan candidatos que pudieron avanzar y fueron descartados. Por eso la app no debe tomar decisiones finales sola.
           </p>
         </div>
       </div>
