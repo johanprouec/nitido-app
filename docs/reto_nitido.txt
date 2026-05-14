@@ -1,0 +1,208 @@
+Reto NÍTIDO
+Examen 3 — Machine Learning II
+Pregrado en Ciencia de Datos · Universidad Externado de Colombia
+Docente: Alber Montenegro
+1. En qué consiste el reto
+Este reto es el Examen 3 del curso. La sustentación oral funciona como el examen final del
+curso: en ella el grupo defiende todo el trabajo realizado y el profesor evalúa el dominio real de
+las decisiones tomadas. No hay un examen adicional al margen del reto.
+Hasta ahora ustedes han aprendido a entrenar modelos, ajustar hiperparámetros, validar
+resultados, interpretar predicciones y comunicar hallazgos. El reto es la oportunidad de poner
+todo junto en un mismo entregable, en condiciones que se parecen a las de un trabajo real: un
+cliente, un dataset, un plazo, decisiones que tomar y consecuencias.
+Lo que les voy a pedir es lo que cualquier empleador les va a pedir el primer año de trabajo:
+recibir un problema y un dataset, producir un modelo, explicarlo, defenderlo y desplegarlo.
+No basta con que el modelo prediga bien. Tiene que poderse explicar, tiene que ser justo, tiene
+que poderse defender ante un comité, y tiene que estar disponible para que alguien lo use.
+El reto tiene 20 acciones obligatorias y 4 entregables. Las acciones que falten o estén mal
+hechas penalizan con 0.5 unidades cada una. Los entregables que falten penalizan con 1.0
+unidad cada uno. Hay también condiciones de exclusión que dejan la nota en cero (ver sección
+final).
+¿Cómo cuenta para la nota?
+Para estudiantes en el grupo de bonificaciones. Este reto es el Examen 3 del curso. La nota
+del examen se construye así: nota inicial 5.0, y cada acción omitida o mal ejecutada resta 0.5
+unidades, cada entregable faltante resta 1.0 unidad. La penalización máxima teórica es -13.0
+unidades (10 por acciones + 3 por entregables faltantes), aunque en la práctica la nota mínima
+posible es 0.0.
+Para estudiantes que no están en bonificaciones. Este reto también es el Examen 3 del
+curso. Las mismas 20 acciones, los mismos 4 entregables y las mismas condiciones de exclusión
+aplican. Importante: los estudiantes sin bonificación deben agruparse exclusivamente entre
+ellos. No pueden formar grupos mixtos con estudiantes en bonificaciones.
+2. El caso: NÍTIDO
+NÍTIDO es una startup bogotana que desarrolló un sistema de pre-filtrado automático de hojas de
+vida con inteligencia artificial. La empresa atiende a grandes compañías en Colombia (bancos,
+retail, salud) que reciben miles de aplicaciones por proceso y necesitan una primera filtración
+antes de que un humano revise cada caso.
+El producto ya está construido: hay un dataset histórico, hay variables relevantes y hay interés
+del mercado. Pero NÍTIDO no puede salir a producción todavía. La razón es regulatoria: la nueva
+Ley Estatutaria de Inteligencia Artificial en Colombia exige que todo sistema automatizado que
+tome decisiones sobre personas presente un informe de explicabilidad ante el Ministerio. Sin
+ese informe, NÍTIDO no puede vender el producto.
+Ustedes y su equipo fueron contratados como científicos de datos para construir el modelo desde
+cero y producir el informe que NÍTIDO entregará al regulador.
+"Mirá, yo no necesito que me muestres código. Yo necesito que me digás si este sistema
+sirve. Si lo apruebo y le vendemos a un banco, y mañana sale un escándalo porque
+discrimina a alguien, yo soy el que va a salir en El Tiempo, no vos. Así que cuando me
+presentés, hablame claro: ¿el modelo sirve? ¿hay riesgos? ¿qué hacemos? Yo confío
+en que saben programar. Lo que les estoy pagando es el criterio."
+— Juanpis, CEO de NÍTIDO
+2.1 El dataset
+NÍTIDO les entrega el archivo candidatos_nitido.csv con 5000 candidatos históricos y 18
+variables por candidato. Las variables aparecen anonimizadas (x1, x2, ..., x18) por razones de
+privacidad: NÍTIDO firmó con sus clientes acuerdos de confidencialidad que les impiden
+compartir los nombres reales de las variables con terceros, ustedes incluidos. Esto es realista:
+les pasará en muchos trabajos.
+La etiqueta es avanza, una variable binaria: 1 si el candidato fue seleccionado para entrevista en
+el proceso histórico, 0 si fue descartado por el sistema. Esta es la variable que el modelo debe
+aprender a predecir.
+Tienen que trabajar con las variables tal como están. No pueden adivinar qué es cada una. Su
+trabajo es entender qué hace el modelo a partir de los datos, no a partir de supuestos sobre el
+dominio. Esto es exactamente lo que hace un auditor regulatorio cuando llega a revisar un
+sistema automatizado.
+2.2 Sobre el uso de IA
+Pueden usar IA (ChatGPT, Claude, Gemini, Copilot) para escribir código. Eso no está prohibido.
+Lo que se evalúa es que entiendan las decisiones, interpreten los resultados y justifiquen las
+elecciones. Si usan IA pero no entienden lo que hicieron, eso se va a notar en la sustentación y
+van a perder acciones e incluso pueden perder el examen completo. La IA es una herramienta de
+productividad, no un sustituto del criterio.
+3. Las cuatro fases del reto
+El reto está organizado en cuatro fases que reflejan el ciclo completo de un proyecto de machine
+learning. Cada fase contiene varias acciones obligatorias. Las acciones se evalúan tanto en el
+cuadernillo técnico como en la sustentación.
+Fase 1 — Comprensión del problema y los datos
+Acción 1. Análisis exploratorio visual del dataset con hallazgos explícitos. Distribuciones,
+rangos, valores típicos por clase, identificación del tipo de cada variable (continua, categórica,
+binaria).
+Acción 2. Diagnóstico de calidad de los datos. Detección de NAs, outliers, desbalance de
+clases. Conclusiones sobre qué tratar y cómo.
+Acción 3. Análisis de correlaciones entre variables, con conclusiones explícitas para el
+modelado posterior. ¿Hay variables redundantes? ¿Hay pares altamente correlacionados?
+Fase 2 — Preprocesamiento y modelado
+Acción 4. Partición train / validation / test con justificación del tamaño de cada conjunto. ¿Por
+qué eligieron esa partición?
+Acción 5. Estandarización o codificación de variables, justificando qué variables se
+transforman y por qué. ¿Necesitan estandarizar para los modelos que van a usar?
+Acción 6. Manejo del desbalance de clases (si aplica), justificando la técnica elegida o por
+qué no la aplicaron.
+Acción 7. Entrenar un modelo base interpretable (regresión logística o árbol pequeño) como
+baseline de comparación.
+Acción 8. Entrenar al menos dos modelos complejos competidores (Random Forest,
+XGBoost, Gradient Boosting, etc.).
+Acción 9. Búsqueda de hiperparámetros con validación cruzada y grilla justificada. No usar
+valores por defecto sin discutirlos.
+Acción 10. Comparación explícita de los modelos con criterios claros y elección razonada del
+modelo final.
+Fase 3 — Evaluación y explicabilidad
+Acción 11. Elección de la métrica principal justificada por el contexto de negocio (accuracy,
+precision, recall, F1, AUC, etc.). ¿Qué métrica le importa más a NÍTIDO y por qué?
+Acción 12. Matriz de confusión, curva ROC o Precision-Recall y elección del umbral de
+decisión.
+Acción 13. Evaluación honesta en test: comparación train vs. test para diagnosticar
+sobreajuste. Si hay sobreajuste, hay que reportarlo, no esconderlo.
+Acción 14. Análisis de explicabilidad global: Permutation Importance + SHAP summary
+(beeswarm) interpretados. ¿Qué variables manda el modelo? ¿En qué dirección?
+Acción 15. Análisis de explicabilidad de efectos: PDP + ICE en las variables más importantes.
+¿Hay variables con efecto no monótono o con interacciones ocultas?
+Acción 16. Análisis de explicabilidad local: SHAP local + LIME en al menos 3 casos
+representativos (un aprobado con alta confianza, un rechazado con alta confianza, un caso
+borderline).
+Acción 17. Generación de contrafactuales accionables para los casos rechazados. ¿Qué
+tendrían que cambiar para ser aprobados?
+Fase 4 — Auditoría, despliegue y decisión
+Acción 18. Auditoría de sesgos. Usando los hallazgos de XAI, identificar si el modelo
+presenta sesgos discriminatorios o problemáticos. Esta es la acción más crítica del reto.
+Acción 19. App en Streamlit funcional. Subida a Streamlit Cloud (link en el cuadernillo).
+Recibe los inputs de un candidato nuevo y devuelve: predicción + gráfico SHAP local +
+contrafactual sugerido.
+Acción 20. Recomendación final al CEO. ¿El modelo puede salir a producción? Si sí, bajo
+qué condiciones. Si no, qué hay que corregir antes. La respuesta debe sustentarse en TODO
+el análisis previo.
+4. Entregables
+Hay cuatro entregables. Los tres documentos (informe ejecutivo, cuadernillo técnico y app de
+Streamlit) se envían por correo el 19 de mayo. La sustentación oral es el 20 de mayo en el
+horario de clase. Cada entregable faltante resta 1.0 unidad sobre la nota del examen 3.
+4.1 Informe ejecutivo (2 a 3 páginas)
+Documento corto, directo, dirigido a Juanpis (el CEO). Solo decisiones y conclusiones. Cero
+tecnicismos. Estructura sugerida: contexto, qué encontramos, recomendación final, próximos
+pasos. Es lo que un consultor le entrega a un cliente sin formación técnica.
+4.2 Cuadernillo técnico (15 a 30 páginas)
+Estilo entregable de consultora. Cubre las 20 acciones con visualizaciones limpias,
+interpretaciones explícitas y justificación de cada decisión. Prohibido mostrar código, outputs de
+consola o mensajes de error. Si aparecen, no cuenta como cuadernillo. Para mostrar código,
+usen un repositorio aparte y enlácenlo desde el cuadernillo.
+4.3 App en Streamlit
+Aplicación funcional, subida a Streamlit Cloud. Debe estar accesible públicamente vía link el día
+de la sustentación. La app recibe los valores de un candidato nuevo, devuelve la predicción del
+modelo, muestra un gráfico SHAP local explicando la decisión y sugiere un contrafactual si la
+predicción es negativa. El día de la sustentación, el grupo debe mostrar la app desplegada y
+funcionando en vivo. Si la app no funciona en ese momento, se considera no entregada.
+4.4 Sustentación oral (20 minutos por grupo)
+Presentación en vivo ante el profesor (el CEO). Estructura sugerida: contexto del problema (2
+min), análisis técnico (8 min), hallazgos de explicabilidad y auditoría de sesgos (6 min),
+recomendación final y demo de la app (4 min).
+Solo un integrante del grupo expone. El profesor escoge a quién, en el momento de la
+sustentación, sin previo aviso. Esto significa que todos los integrantes del grupo deben
+dominar todo el contenido del trabajo. No se permite repartirse las secciones entre integrantes
+y que cada uno hable solo de la suya. El profesor también puede hacer preguntas a cualquier
+integrante durante la sustentación.
+5. Plazo y conformación de equipos
+5.1 Fechas
+Martes 19 de mayo: entrega por correo al profesor de los tres documentos:
+• Informe ejecutivo (PDF)
+• Cuadernillo técnico (PDF)
+• Link público de la app desplegada en Streamlit Cloud
+Miércoles 20 de mayo: sustentación oral en horario de clase. La sustentación es la evaluación
+final del curso.
+5.2 Conformación de equipos
+Grupos de máximo 4 estudiantes. Los grupos los conforman los estudiantes (no los asigna el
+profesor). Cada grupo es responsable de la entrega completa: si un integrante no participa, esa
+es responsabilidad del grupo, no del profesor.
+Restricción importante: los estudiantes que no están en el grupo de bonificaciones deben
+agruparse exclusivamente entre ellos. No pueden formar grupos mixtos con estudiantes en
+bonificaciones, porque la mecánica de calificación es distinta para cada caso.
+Recomendación de organización interna: distribuyan el trabajo por fases, no por acciones
+sueltas. Y todos los integrantes deben conocer todo el trabajo, porque cualquiera puede ser
+elegido para sustentar. Una persona que hace solo el EDA y no entiende la parte de XAI corre el
+riesgo de ser elegida para exponer y no poder defender el trabajo del grupo.
+6. Tabla de penalizaciones
+6.1 Penalizaciones por acciones (0.5 unidades cada una)
+# Acción obligatoria Penalización
+1 EDA visual con hallazgos explícitos -0.5
+2 Diagnóstico de calidad de datos (NAs, outliers, desbalance) -0.5
+3 Análisis de correlaciones con conclusiones -0.5
+4 Partición train/val/test justificada -0.5
+5 Estandarización/codificación justificada -0.5
+6 Manejo del desbalance (si aplica) justificado -0.5
+7 Modelo base interpretable como baseline -0.5
+8 Al menos 2 modelos complejos entrenados -0.5
+9 Búsqueda de hiperparámetros con CV -0.5
+10 Comparación de modelos y elección razonada -0.5
+11 Métrica principal justificada por contexto de negocio -0.5
+12 Matriz de confusión + ROC/PR + umbral -0.5
+13 Diagnóstico honesto de sobreajuste -0.5
+14 Permutation Importance + SHAP global interpretados -0.5
+15 PDP + ICE en variables top con interpretación -0.5
+16 SHAP local + LIME en 3 casos representativos -0.5
+17 Contrafactuales accionables para rechazados -0.5
+18 Detección y reporte de sesgos vía XAI -0.5
+19 App Streamlit funcional con SHAP + contrafactual -0.5
+20 Recomendación final con sustento -0.5
+Subtotal máximo por acciones -10.0
+6.2 Penalizaciones por entregables faltantes (1.0 unidad cada uno)
+Entregable faltante Penalización
+No entregar el informe ejecutivo el 19 de mayo -1.0
+No entregar el cuadernillo técnico el 19 de mayo -1.0
+No entregar el link de la app, o que la app no funcione el día de la sustentación -1.0
+Subtotal máximo por entregables -3.0
+Penalización máxima teórica combinada: -13.0 unidades. En la práctica, la nota mínima
+posible es 0.0.
+7. Condiciones de exclusión
+Si ocurre cualquiera de estas situaciones, la nota del examen 3 queda automáticamente en 0:
+• No presentarse a la sustentación oral del 20 de mayo.
+• Plagio entre grupos o entrega idéntica a la de otro grupo.
+• Falsificación de resultados (reportar métricas que no corresponden con lo que el modelo
+realmente produce, ocultar sobreajuste cuando lo hay, etc.).
+• Durante la sustentación, el integrante elegido por el profesor no logra responder preguntas
+básicas sobre el trabajo entregado, lo cual evidencia que el grupo no entiende lo que produjo.
+NÍTIDO espera su informe el 19 de mayo. La sustentación es el 20. Juanpis cuenta con que
+ustedes le digan la verdad sobre el modelo, no la verdad que le gustaría escuchar.

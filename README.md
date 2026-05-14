@@ -10,6 +10,10 @@ Interfaz web para el proyecto Nitido: simulacion, auditoria y visualizacion de m
 - Tailwind CSS 4
 - Vercel
 
+## Decision de implementacion
+
+Aunque el enunciado menciona Streamlit, este proyecto se implementara como una app web propia desplegada en Vercel y versionada en GitHub. La app debe cubrir la misma funcionalidad evaluable: inputs de candidato, prediccion, explicabilidad local y contrafactual.
+
 ## Desarrollo local
 
 1. Instalar dependencias:
@@ -57,4 +61,13 @@ Proyecto conectado:
 
 ## Modelo
 
-La interfaz todavia usa datos estaticos. El siguiente paso es convertir el modelo del Colab en un endpoint de inferencia y conectar el simulador con `fetch` desde React.
+La interfaz todavia usa datos estaticos. Ya estan cargados el dataset y el notebook del Colab. El siguiente paso es traer los artefactos exportados del modelo y convertirlos en un endpoint de inferencia para conectar el simulador con `fetch` desde React.
+
+## Estructura ML
+
+- `docs/`: enunciado del reto y entregables finales.
+- `data/`: dataset `candidatos_nitido.csv`.
+- `notebooks/`: notebook exportado desde Colab.
+- `models/`: modelo y artefactos exportados.
+- `api/`: endpoints de inferencia y explicabilidad para Vercel.
+- `src/`: interfaz React/Vite desplegada en Vercel.
