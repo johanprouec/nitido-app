@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { 
   Network, 
   Bolt, 
@@ -29,11 +29,11 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
-  BookOpen
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useSpring, useTransform } from 'motion/react';
 import executiveReportHtml from '../docs/informe_ejecutivo_nitido.html?raw';
 import technicalBookletHtml from '../docs/cuadernillo_tecnico_nitido.html?raw';
+import heroSimulatorImage from '../imagen.png';
 
 // --- Types ---
 type ViewId = 'dashboard' | 'audit' | 'simulate' | 'metrics' | 'compliance' | 'executive-report' | 'technical-booklet';
@@ -441,6 +441,100 @@ const IMAGES = {
 
 // --- Sub-components ---
 
+const HeroSimulatorCard = () => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ['start end', 'end start'],
+  });
+
+  const rotateY = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [-8, 0, 8]), {
+    stiffness: 90,
+    damping: 24,
+    mass: 0.4,
+  });
+  const rotateX = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [7, 0, -7]), {
+    stiffness: 90,
+    damping: 24,
+    mass: 0.4,
+  });
+  const y = useSpring(useTransform(scrollYProgress, [0, 1], [42, -42]), {
+    stiffness: 85,
+    damping: 26,
+    mass: 0.45,
+  });
+  const z = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [0, 36, 0]), {
+    stiffness: 90,
+    damping: 24,
+    mass: 0.4,
+  });
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, scale: 0.92, y: 28 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      className="lg:col-span-5 relative flex w-full items-center justify-center [perspective:1200px]"
+    >
+      <motion.div
+        style={{ rotateX, rotateY, y, z, transformStyle: 'preserve-3d' }}
+        className="relative w-full max-w-[560px] will-change-transform"
+      >
+        <div className="absolute -inset-6 rounded-[2.25rem] bg-[radial-gradient(circle_at_25%_20%,rgba(20,184,166,0.22),transparent_34%),radial-gradient(circle_at_80%_70%,rgba(139,92,246,0.24),transparent_38%)] blur-2xl" />
+        <div className="relative overflow-hidden rounded-[1.75rem] border border-cyan-300/35 bg-gradient-to-br from-violet-500/20 via-surface-container-low/80 to-cyan-400/10 p-2 shadow-[0_28px_80px_rgba(15,23,42,0.36),0_0_42px_rgba(139,92,246,0.22)] ring-1 ring-violet-300/25 backdrop-blur-xl">
+          <div className="absolute inset-0 rounded-[1.75rem] bg-[linear-gradient(135deg,rgba(255,255,255,0.16),transparent_32%,rgba(20,184,166,0.12))]" />
+          <motion.div
+            style={{ transform: 'translateZ(34px)' }}
+            className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-slate-950/50"
+          >
+            <img
+              src={heroSimulatorImage}
+              alt="Vista del simulador NÍTIDO con predicción y explicación del candidato"
+              className="block aspect-[16/11] w-full object-cover"
+              loading="eager"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.18),transparent_24%,transparent_72%,rgba(20,184,166,0.16))]" />
+          </motion.div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const CollapsibleText = ({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div>
+      <div
+        className={className}
+        style={expanded ? undefined : {
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}
+      >
+        {children}
+      </div>
+      <button
+        type="button"
+        onClick={() => setExpanded((current) => !current)}
+        className="mt-3 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/10"
+      >
+        {expanded ? 'Ver menos' : 'Ver más'}
+      </button>
+    </div>
+  );
+};
+
 const DashboardView = ({ onNavigate }: { onNavigate: (view: ViewId) => void }) => (
   <div className="space-y-section-gap">
     <section className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center min-h-[auto] lg:min-h-[600px]">
@@ -500,43 +594,7 @@ const DashboardView = ({ onNavigate }: { onNavigate: (view: ViewId) => void }) =
         </motion.div>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
-        className="lg:col-span-5 relative flex justify-center items-center w-full"
-      >
-        <div className="relative w-full aspect-[4/3] sm:aspect-square max-w-[500px]">
-          <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-[2rem]" />
-          <div className="relative glass-card rounded-2xl sm:rounded-[2.5rem] w-full h-full p-4 sm:p-6 overflow-hidden border-white/20 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Cpu className="w-6 h-6 text-primary" />
-                <div>
-                  <p className="text-sm uppercase tracking-[0.25em] text-on-surface-variant">Mini-dashboard</p>
-                  <h3 className="text-xl font-bold">Resumen ejecutivo</h3>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'AUC test', value: '0.8056', color: 'primary' },
-                  { label: 'F1 test', value: '0.7241', color: 'tertiary' },
-                  { label: 'Umbral', value: '0.45', color: 'secondary' },
-                  { label: 'Candidatos', value: '5.000', color: 'primary' },
-                ].map((tile) => (
-                  <div key={tile.label} className="rounded-2xl sm:rounded-3xl p-3 sm:p-4 bg-surface-container-highest border border-white/10">
-                    <span className="text-[11px] uppercase tracking-[0.25em] text-on-surface-variant">{tile.label}</span>
-                    <p className="mt-2 sm:mt-3 text-2xl sm:text-3xl font-bold" style={{ color: COLOR_MAP[tile.color] }}>{tile.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-2xl sm:rounded-3xl p-3 sm:p-4 bg-surface-container-low/80 border border-white/10 text-xs sm:text-sm text-on-surface-variant">
-              <p className="font-medium text-on-surface">Un prototipo listo para comité ejecutivo: explica decisiones, muestra métricas reales y justifica el umbral del modelo.</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+      <HeroSimulatorCard />
     </section>
 
     <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
@@ -576,181 +634,271 @@ const DashboardView = ({ onNavigate }: { onNavigate: (view: ViewId) => void }) =
         </motion.div>
       ))}
     </section>
+
+    <section className="border-t border-white/10 pt-8">
+      <div className="glass-card rounded-2xl border-primary/20 p-5 sm:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-on-surface-variant">Documentos integrados</p>
+            <h2 className="mt-2 text-2xl font-bold">Evidencia ejecutiva y técnica</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
+              Accede a los documentos completos sin saturar la navegación principal.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button
+              onClick={() => onNavigate('executive-report')}
+              className="rounded-2xl border border-primary/25 bg-primary/10 px-5 py-4 text-sm font-bold text-primary transition hover:bg-primary/15"
+            >
+              Ver informe ejecutivo
+            </button>
+            <button
+              onClick={() => onNavigate('technical-booklet')}
+              className="rounded-2xl border border-secondary/25 bg-secondary/10 px-5 py-4 text-sm font-bold text-secondary transition hover:bg-secondary/15"
+            >
+              Ver cuadernillo técnico
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 );
 
-const AuditView = ({ onNavigate }: { onNavigate: (view: ViewId) => void }) => (
-  <div className="space-y-section-gap max-w-7xl mx-auto">
-    <section className="glass-card rounded-3xl p-8 border-secondary/20">
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <ShieldCheck className="text-secondary w-6 h-6" />
+const AuditView = ({ onNavigate }: { onNavigate: (view: ViewId) => void }) => {
+  const [activeAuditTab, setActiveAuditTab] = useState<'ceo' | 'bias' | 'project'>('ceo');
+  const [showPlan, setShowPlan] = useState(false);
+
+  const auditTabs = [
+    { id: 'ceo' as const, label: 'Resumen CEO' },
+    { id: 'bias' as const, label: 'Auditoría de sesgos' },
+    { id: 'project' as const, label: 'Estado del proyecto' },
+  ];
+
+  return (
+    <div className="space-y-8 max-w-7xl mx-auto">
+      <section className="glass-card rounded-3xl p-5 sm:p-8 border-secondary/20">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="text-secondary w-6 h-6" />
+              <div>
+                <p className="text-sm uppercase tracking-[0.25em] text-on-surface-variant">Auditoría</p>
+                <h1 className="text-3xl md:text-4xl font-bold">Gobernanza y salida responsable</h1>
+              </div>
+            </div>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-on-surface-variant">
+              La sección separa recomendación ejecutiva, riesgos de sesgo y estado del proyecto para que la lectura sea más clara.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-2 rounded-2xl border border-white/10 bg-surface-container-low/60 p-2 sm:grid-cols-3">
+            {auditTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveAuditTab(tab.id)}
+                className={`rounded-xl px-4 py-3 text-sm font-bold transition ${activeAuditTab === tab.id ? 'bg-primary text-on-primary shadow-[0_0_18px_rgba(139,92,246,0.28)]' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {activeAuditTab === 'ceo' && (
+        <section className="glass-card rounded-3xl p-5 sm:p-8 border-secondary/20">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.25em] text-on-surface-variant">Recomendación al CEO</p>
-              <h2 className="text-3xl font-bold">Salida pública condicionada</h2>
+              <h2 className="mt-2 text-3xl font-bold">Salida pública condicionada</h2>
+              <p className="mt-4 text-on-surface-variant leading-relaxed max-w-2xl">
+                Presentar el modelo como prototipo explicable para validación, con recomendación de no automatizar la decisión final y mantener revisión humana en casos cercanos al umbral.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {[
+                { label: 'Decisión', value: 'Salida condicionada', color: 'primary' },
+                { label: 'Riesgo clave', value: 'Datos anonimizados', color: 'error' },
+                { label: 'Control', value: 'Revisión humana', color: 'secondary' },
+              ].map((item) => (
+                <div key={item.label} className="rounded-3xl border border-white/10 p-4" style={{ backgroundColor: toRgba(COLOR_MAP[item.color], 0.08) }}>
+                  <span className="block font-mono text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">{item.label}</span>
+                  <p className="text-xl font-bold" style={{ color: COLOR_MAP[item.color] }}>{item.value}</p>
+                </div>
+              ))}
             </div>
           </div>
-          <p className="text-on-surface-variant leading-relaxed max-w-2xl">
-            Presentar el modelo como prototipo explicable para validación, con recomendación de no automatizar la decisión final y mantener revisión humana en casos cercanos al umbral. Esto pone el foco correcto en la decisión ejecutiva: valor para el CEO y gobernanza clara.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { label: 'Decisión', value: 'Salida condicionada', color: 'primary' },
-            { label: 'Riesgo clave', value: 'Datos anonimizados', color: 'error' },
-            { label: 'Control', value: 'Revisión humana', color: 'secondary' },
-          ].map((item) => (
-            <div key={item.label} className="rounded-3xl border border-white/10 p-4" style={{ backgroundColor: toRgba(COLOR_MAP[item.color], 0.08) }}>
-              <span className="block font-mono text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">{item.label}</span>
-              <p className="text-xl font-bold" style={{ color: COLOR_MAP[item.color] }}>{item.value}</p>
+
+          <div className="mt-8 grid grid-cols-1 gap-6 border-t border-white/10 pt-8 lg:grid-cols-2">
+            <div className="rounded-3xl border border-white/10 bg-surface-container-low/60 p-6">
+              <h3 className="text-xl font-bold mb-4">SHAP global</h3>
+              <div className="space-y-3">
+                {SHAP_GLOBAL.slice(0, 6).map((item) => (
+                  <div key={item.variable} className="space-y-2">
+                    <div className="flex justify-between text-sm font-medium">
+                      <span>{item.variable}</span>
+                      <span>{item.value.toFixed(4)}</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-surface-container-highest overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: `${Math.max(18, (item.value / SHAP_GLOBAL[0].value) * 100)}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <CollapsibleText className="mt-5 text-sm text-on-surface-variant">
+                Importancia global SHAP real del modelo: x1, x2, x5, x9, x7 y x10 lideran las contribuciones absolutas medias. x14 también es crítica por su efecto negativo.
+              </CollapsibleText>
             </div>
-          ))}
-        </div>
-      </div>
 
-      <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-3xl border border-white/10 bg-surface-container-low/60 p-6">
-          <h3 className="text-xl font-bold mb-4">SHAP global</h3>
-          <div className="space-y-3">
-            {SHAP_GLOBAL.slice(0, 6).map((item) => (
-              <div key={item.variable} className="space-y-2">
-                <div className="flex justify-between text-sm font-medium">
-                  <span>{item.variable}</span>
-                  <span>{item.value.toFixed(4)}</span>
-                </div>
-                <div className="h-3 rounded-full bg-surface-container-highest overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${Math.max(18, (item.value / SHAP_GLOBAL[0].value) * 100)}%` }}></div>
-                </div>
+            <div className="rounded-3xl border border-white/10 bg-surface-container-low/60 p-6">
+              <h3 className="text-xl font-bold mb-4">Permutation Importance</h3>
+              <div className="space-y-3">
+                {PERMUTATION_IMPORTANCE.slice(0, 5).map((item) => (
+                  <div key={item.variable} className="flex items-center justify-between rounded-2xl border border-white/10 bg-surface-container/50 px-4 py-3 text-sm">
+                    <span className="font-semibold">{item.variable}</span>
+                    <span className="font-mono text-primary">{item.value.toFixed(4)}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+              <CollapsibleText className="mt-5 text-sm text-on-surface-variant leading-relaxed">
+                Permutation Importance confirma a x1 y x2 como señales dominantes. Por su peso global, x1, x2 y x14 quedan como variables críticas para auditoría de proxy sensible.
+              </CollapsibleText>
+            </div>
           </div>
-          <p className="mt-5 text-sm text-on-surface-variant">
-            Importancia global SHAP real del modelo: x1, x2, x5, x9, x7 y x10 lideran las contribuciones absolutas medias. x14 también es crítica por su efecto negativo.
-          </p>
-        </div>
+        </section>
+      )}
 
-        <div className="rounded-3xl border border-white/10 bg-surface-container-low/60 p-6">
-          <h3 className="text-xl font-bold mb-4">Permutation Importance</h3>
-          <div className="space-y-3">
-            {PERMUTATION_IMPORTANCE.slice(0, 5).map((item) => (
-              <div key={item.variable} className="flex items-center justify-between rounded-2xl border border-white/10 bg-surface-container/50 px-4 py-3 text-sm">
-                <span className="font-semibold">{item.variable}</span>
-                <span className="font-mono text-primary">{item.value.toFixed(4)}</span>
-              </div>
-            ))}
-          </div>
-          <p className="mt-5 text-sm text-on-surface-variant leading-relaxed">
-            Permutation Importance confirma a x1 y x2 como señales dominantes. Por su peso global, x1, x2 y x14 quedan como variables críticas para auditoría de proxy sensible.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <section className="glass-card rounded-3xl p-5 sm:p-8 border-error/25">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-6 w-6 text-error" />
+      {activeAuditTab === 'bias' && (
+        <section className="glass-card rounded-3xl p-5 sm:p-8 border-error/25">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-on-surface-variant">Riesgo crítico</p>
-              <h3 className="text-2xl font-bold">Auditoría de sesgos vía XAI</h3>
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-6 w-6 text-error" />
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-on-surface-variant">Riesgo crítico</p>
+                  <h2 className="text-2xl font-bold">Auditoría de sesgos vía XAI</h2>
+                </div>
+              </div>
+              <p className="mt-4 max-w-3xl text-sm leading-relaxed text-on-surface-variant">
+                La conclusión responsable no es “el modelo no discrimina”; con variables anonimizadas no se puede probar eso. La conclusión defendible es que el modelo tiene señales útiles, pero requiere una auditoría interna con nombres reales de variables y medición por subgrupos antes de producción.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-error/25 bg-error/10 p-5 lg:max-w-sm">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-error">Conclusión regulatoria</p>
+              <p className="mt-3 text-sm font-semibold leading-relaxed text-on-surface">
+                No se recomienda automatizar decisiones finales. Sí se recomienda piloto supervisado con monitoreo, revisión humana y bitácora de casos borderline.
+              </p>
             </div>
           </div>
-          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-on-surface-variant">
-            La conclusión responsable no es “el modelo no discrimina”; con variables anonimizadas no se puede probar eso. La conclusión defendible es que el modelo tiene señales útiles, pero requiere una auditoría interna con nombres reales de variables y medición por subgrupos antes de producción.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-error/25 bg-error/10 p-5 lg:max-w-sm">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-error">Conclusión regulatoria</p>
-          <p className="mt-3 text-sm font-semibold leading-relaxed text-on-surface">
-            No se recomienda automatizar decisiones finales. Sí se recomienda piloto supervisado con monitoreo, revisión humana y bitácora de casos borderline.
-          </p>
-        </div>
-      </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {BIAS_AUDIT_POINTS.map((point) => (
-          <article key={point.title} className="rounded-2xl border border-white/10 bg-surface-container-low/60 p-5">
-            <h4 className="text-lg font-bold text-error">{point.title}</h4>
-            <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">{point.text}</p>
-          </article>
-        ))}
-      </div>
-    </section>
+          <div className="mt-6 grid grid-cols-1 gap-4 border-t border-white/10 pt-6 md:grid-cols-2 lg:grid-cols-4">
+            {BIAS_AUDIT_POINTS.map((point) => (
+              <article key={point.title} className="rounded-2xl border border-white/10 bg-surface-container-low/60 p-5">
+                <h4 className="text-lg font-bold text-error">{point.title}</h4>
+                <CollapsibleText className="mt-3 text-sm leading-relaxed text-on-surface-variant">
+                  {point.text}
+                </CollapsibleText>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
-    <section>
-      <div className="flex items-center gap-2 mb-8">
-        <Database className="text-secondary w-6 h-6" />
-        <h3 className="text-2xl font-bold">Entregables ejecutivos</h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
-        {[
-          { title: 'Informe ejecutivo', desc: 'Resumen estratégico para Juanpis: utilidad del modelo, riesgos y recomendación final.', status: 'Disponible', view: 'executive-report' as ViewId },
-          { title: 'Cuadernillo técnico', desc: 'Documento técnico con EDA, modelado, evaluación, XAI, contrafactuales y auditoría.', status: 'Disponible', view: 'technical-booklet' as ViewId },
-          { title: 'App funcional', desc: 'Simulador React/Vercel conectado al modelo real y endpoint de inferencia.', status: 'Operativa' },
-          { title: 'Demo ejecutiva', desc: 'Flujo de caso aprobado, caso rechazado, caso borderline y recomendación de salida a producción.', status: 'Lista' }
-        ].map((item, i) => (
-          <motion.div 
-            key={i}
-            whileHover={{ y: -5 }}
-            className="glass-card rounded-xl p-6 flex flex-col h-full border-t-4"
-            style={{ borderColor: COLOR_MAP.primary }}
-          >
-            <div className="mb-4">
-              <Bolt className="w-8 h-8" style={{ color: COLOR_MAP.primary }} />
+      {activeAuditTab === 'project' && (
+        <section className="space-y-8">
+          <div className="glass-card rounded-3xl p-5 sm:p-8 border-primary/20">
+            <div className="flex items-center gap-2 mb-8">
+              <Database className="text-secondary w-6 h-6" />
+              <h2 className="text-2xl font-bold">Entregables ejecutivos</h2>
             </div>
-            <h4 className="text-lg font-bold mb-2">{item.title}</h4>
-            <p className="text-sm text-on-surface-variant mb-6 flex-grow">{item.desc}</p>
-            {'view' in item && (
-              <button
-                onClick={() => onNavigate(item.view)}
-                className="mb-4 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-bold text-primary transition hover:bg-primary/15"
-              >
-                Abrir documento
-              </button>
-            )}
-            <div className="flex items-center gap-2 text-secondary">
-              <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-              <span className="font-mono text-[10px] uppercase font-bold tracking-widest">{item.status}</span>
+            <div className="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-4">
+              {[
+                { title: 'Informe ejecutivo', desc: 'Resumen estratégico para Juanpis: utilidad del modelo, riesgos y recomendación final.', status: 'Disponible', view: 'executive-report' as ViewId },
+                { title: 'Cuadernillo técnico', desc: 'Documento técnico con EDA, modelado, evaluación, XAI, contrafactuales y auditoría.', status: 'Disponible', view: 'technical-booklet' as ViewId },
+                { title: 'App funcional', desc: 'Simulador React/Vercel conectado al modelo real y endpoint de inferencia.', status: 'Operativa' },
+                { title: 'Demo ejecutiva', desc: 'Flujo de caso aprobado, caso rechazado, caso borderline y recomendación de salida a producción.', status: 'Lista' }
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ y: -5 }}
+                  className="glass-card rounded-xl p-6 flex flex-col h-full border-t-4"
+                  style={{ borderColor: COLOR_MAP.primary }}
+                >
+                  <div className="mb-4">
+                    <Bolt className="w-8 h-8" style={{ color: COLOR_MAP.primary }} />
+                  </div>
+                  <h4 className="text-lg font-bold mb-2">{item.title}</h4>
+                  <p className="text-sm text-on-surface-variant mb-6 flex-grow">{item.desc}</p>
+                  {'view' in item && (
+                    <button
+                      onClick={() => onNavigate(item.view)}
+                      className="mb-4 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-bold text-primary transition hover:bg-primary/15"
+                    >
+                      Abrir documento
+                    </button>
+                  )}
+                  <div className="flex items-center gap-2 text-secondary">
+                    <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+                    <span className="font-mono text-[10px] uppercase font-bold tracking-widest">{item.status}</span>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
-        ))}
-      </div>
-    </section>
+          </div>
 
-    <section className="max-w-4xl mx-auto">
-      <div className="flex items-center gap-2 mb-12">
-        <Activity className="text-secondary w-6 h-6" />
-        <h3 className="text-2xl font-bold">Pipeline del proyecto</h3>
-      </div>
-      <div className="relative">
-        <div className="absolute left-[3px] md:left-1/2 top-0 bottom-0 w-1 rounded-full" style={{ background: `linear-gradient(180deg, ${COLOR_MAP.primary}, ${COLOR_MAP.secondary}, ${COLOR_MAP.tertiary})`, opacity: 0.25 }}></div>
-        {[
-          { phase: 1, title: 'Comprensión de datos', color: 'primary', content: '5.000 candidatos históricos, 18 variables anonimizadas y etiqueta binaria avanza.' },
-          { phase: 2, title: 'Preprocesamiento', color: 'secondary', content: 'Pipeline con imputación, escalado y modelo final de regresión logística.' },
-          { phase: 3, title: 'Evaluación', color: 'tertiary', content: 'Umbral operativo 0.45, F1 de prueba 0.7241 y AUC de prueba 0.8056.' },
-          { phase: 4, title: 'Auditoría', color: 'error', content: 'Variables anonimizadas: el modelo requiere supervisión humana y revisión de sesgos antes de producción.' }
-        ].map((p, i) => (
-          <div key={i} className={`relative mb-16 md:flex ${i % 2 === 0 ? 'md:justify-start' : 'md:flex-row-reverse md:justify-start'} items-center w-full`}>
-            <div className="absolute left-[-5px] md:left-1/2 md:-translate-x-1/2 w-5 h-5 rounded-full bg-background border-4 z-10 box-content -ml-[3px]" style={{ borderColor: COLOR_MAP[p.color] }} />
-            <motion.div 
-              initial={{ opacity: 0, x: i % 2 === 0 ? -50 : 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="ml-10 md:ml-0 md:w-[45%] glass-card p-6 rounded-2xl"
-              style={{ borderLeft: `4px solid ${COLOR_MAP[p.color]}` }}
+          <div className="glass-card rounded-3xl p-5 sm:p-8 border-secondary/20">
+            <div className="flex items-center gap-2 mb-12">
+              <Activity className="text-secondary w-6 h-6" />
+              <h2 className="text-2xl font-bold">Pipeline del proyecto</h2>
+            </div>
+            <div className="relative">
+              <div className="absolute left-[3px] md:left-1/2 top-0 bottom-0 w-1 rounded-full" style={{ background: `linear-gradient(180deg, ${COLOR_MAP.primary}, ${COLOR_MAP.secondary}, ${COLOR_MAP.tertiary})`, opacity: 0.25 }} />
+              {[
+                { phase: 1, title: 'Comprensión de datos', color: 'primary', content: '5.000 candidatos históricos, 18 variables anonimizadas y etiqueta binaria avanza.' },
+                { phase: 2, title: 'Preprocesamiento', color: 'secondary', content: 'Pipeline con imputación, escalado y modelo final de regresión logística.' },
+                { phase: 3, title: 'Evaluación', color: 'tertiary', content: 'Umbral operativo 0.45, F1 de prueba 0.7241 y AUC de prueba 0.8056.' },
+                { phase: 4, title: 'Auditoría', color: 'error', content: 'Variables anonimizadas: el modelo requiere supervisión humana y revisión de sesgos antes de producción.' }
+              ].map((p, i) => (
+                <div key={i} className={`relative mb-16 md:flex ${i % 2 === 0 ? 'md:justify-start' : 'md:flex-row-reverse md:justify-start'} items-center w-full`}>
+                  <div className="absolute left-[-5px] md:left-1/2 md:-translate-x-1/2 w-5 h-5 rounded-full bg-background border-4 z-10 box-content -ml-[3px]" style={{ borderColor: COLOR_MAP[p.color] }} />
+                  <motion.div
+                    initial={{ opacity: 0, x: i % 2 === 0 ? -50 : 50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    className="ml-10 md:ml-0 md:w-[45%] glass-card p-6 rounded-2xl"
+                    style={{ borderLeft: `4px solid ${COLOR_MAP[p.color]}` }}
+                  >
+                    <span className="font-mono text-[10px] uppercase tracking-widest mb-1 block" style={{ color: COLOR_MAP[p.color] }}>Fase {p.phase}</span>
+                    <h5 className="text-lg font-bold mb-2">{p.title}</h5>
+                    <p className="text-sm text-on-surface-variant leading-relaxed">{p.content}</p>
+                  </motion.div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <section className="border-t border-white/10 pt-8">
+            <button
+              onClick={() => setShowPlan((current) => !current)}
+              className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-surface-container-low/70 px-5 py-4 text-left transition hover:bg-white/5"
             >
-              <span className="font-mono text-[10px] uppercase tracking-widest mb-1 block" style={{ color: COLOR_MAP[p.color] }}>Fase {p.phase}</span>
-              <h5 className="text-lg font-bold mb-2">{p.title}</h5>
-              <p className="text-sm text-on-surface-variant leading-relaxed">{p.content}</p>
-            </motion.div>
-          </div>
-        ))}
-      </div>
-    </section>
-  </div>
-);
+              <span>
+                <span className="block font-mono text-[10px] uppercase tracking-[0.25em] text-on-surface-variant">Subsección colapsable</span>
+                <span className="mt-1 block text-xl font-bold">Plan de validación</span>
+              </span>
+              <span className="text-primary">{showPlan ? 'Ver menos' : 'Ver más'}</span>
+            </button>
+            {showPlan && (
+              <div className="mt-6">
+                <ComplianceView />
+              </div>
+            )}
+          </section>
+        </section>
+      )}
+    </div>
+  );
+};
 
 const SimulatorView = () => {
   const [candidate, setCandidate] = useState<Record<string, number>>(DEFAULT_CANDIDATE);
@@ -878,7 +1026,7 @@ const SimulatorView = () => {
                     step={step}
                     value={candidate[variable]}
                     onChange={(event) => updateCandidate(variable, Number(event.target.value))}
-                    className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none accent-primary"
+                    className="w-full h-11 bg-surface-container-highest rounded-full appearance-none accent-primary"
                   />
                   <div className="flex justify-between font-mono text-[10px] text-on-surface-variant">
                     <span>{formatNumber(config.min)}</span>
@@ -990,6 +1138,13 @@ const SimulatorView = () => {
                     <span>{result.umbral.toFixed(2)}</span>
                   </div>
                 </div>
+                <button
+                  onClick={() => window.print()}
+                  className="no-print mt-6 w-full rounded-2xl bg-secondary px-5 py-4 text-sm font-bold text-on-primary hover:brightness-110 transition flex items-center justify-center gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Exportar resultado
+                </button>
               </div>
 
               <div className="lg:col-span-5 glass-card rounded-xl p-5 sm:p-8">
@@ -1113,18 +1268,9 @@ const SimulatorView = () => {
               <p className="mt-4 text-sm text-on-surface-variant leading-relaxed bg-primary/10 border border-primary/20 rounded-xl p-4">
                 {plainExplanation.counterfactualText}
               </p>
-              <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                <button
-                  onClick={() => window.print()}
-                  className="no-print w-full sm:w-auto rounded-2xl bg-secondary px-6 py-4 text-sm font-bold text-on-primary hover:brightness-110 transition flex items-center justify-center gap-2"
-                >
-                  <Printer className="h-4 w-4" />
-                  Exportar reporte PDF
-                </button>
-                <p className="text-sm text-on-surface-variant leading-relaxed">
-                  Se genera un reporte limpio para impresión/PDF con resumen ejecutivo, probabilidad, umbral, explicación local, contrafactual y variables evaluadas.
-                </p>
-              </div>
+              <p className="mt-6 text-sm text-on-surface-variant leading-relaxed">
+                El botón de exportación está junto al resultado principal para generar un reporte limpio para impresión/PDF con resumen ejecutivo, probabilidad, umbral, explicación local, contrafactual y variables evaluadas.
+              </p>
             </section>
 
             <section className="glass-card rounded-xl p-5 sm:p-8 border-secondary/20">
@@ -1267,7 +1413,7 @@ const MetricsView = () => (
         >
           <div>
             <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest block mb-2">{m.label}</span>
-            <h3 className={`text-xl sm:text-2xl font-bold ${m.color ? `text-${m.color}` : "text-primary"}`}>{m.val}</h3>
+            <h3 className="text-xl sm:text-2xl font-bold" style={{ color: m.color ? COLOR_MAP[m.color] : COLOR_MAP.primary }}>{m.val}</h3>
           </div>
           {m.meta && <div className="flex items-center gap-2 text-[10px] uppercase font-mono opacity-60"><Fingerprint className="w-3 h-3" /> {m.meta}</div>}
           {m.progress && (
@@ -1301,16 +1447,20 @@ const MetricsView = () => (
         {METRIC_GUIDE.map((item) => (
           <article key={item.title} className="rounded-2xl border border-white/10 bg-surface-container-low/60 p-5">
             <h3 className="text-lg font-bold text-primary">{item.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">{item.body}</p>
-            <p className="mt-3 rounded-xl border border-secondary/20 bg-secondary/10 p-3 text-sm leading-relaxed text-on-surface">
-              {item.interpretation}
-            </p>
+            <CollapsibleText className="mt-3 text-sm leading-relaxed text-on-surface-variant">
+              {item.body}
+            </CollapsibleText>
+            <div className="mt-3 rounded-xl border border-secondary/20 bg-secondary/10 p-3">
+              <CollapsibleText className="text-sm leading-relaxed text-on-surface">
+                {item.interpretation}
+              </CollapsibleText>
+            </div>
           </article>
         ))}
       </div>
     </section>
 
-    <section className="glass-card rounded-xl p-5 sm:p-8 border-tertiary/20">
+    <section className="glass-card rounded-xl p-5 sm:p-8 border-tertiary/20 border-t border-white/10">
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-tertiary/30 bg-tertiary/10 text-tertiary">
           <Monitor className="h-6 w-6" />
@@ -1328,7 +1478,9 @@ const MetricsView = () => (
           <article key={point.title} className="rounded-2xl border border-white/10 bg-surface-container-low/60 p-5">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-tertiary">Punto {index + 1}</span>
             <h3 className="mt-3 text-lg font-bold">{point.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">{point.text}</p>
+            <CollapsibleText className="mt-3 text-sm leading-relaxed text-on-surface-variant">
+              {point.text}
+            </CollapsibleText>
           </article>
         ))}
       </div>
@@ -1339,7 +1491,7 @@ const MetricsView = () => (
       </div>
     </section>
 
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-t border-white/10 pt-8">
       <div className="lg:col-span-2 glass-card rounded-xl p-5 sm:p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -1348,25 +1500,20 @@ const MetricsView = () => (
           </div>
         </div>
 
-        <div className="relative min-h-[260px] sm:aspect-video flex items-end justify-between gap-2 px-2 sm:px-8 pb-10 border-b border-white/10 overflow-hidden">
-          <div className="absolute inset-0 flex flex-col justify-between opacity-5 pointer-events-none pb-12 pt-8">
-            {[1, 2, 3, 4].map((l) => (
-              <div key={l} className="w-full border-t border-on-surface" />
-            ))}
-          </div>
+        <div className="space-y-5 border-b border-white/10 pb-8">
           {TEST_METRICS.map((bar, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-3 sm:gap-4 min-w-0">
-              <div className="relative w-9 sm:w-14 md:w-16 rounded-t-xl overflow-hidden" style={{ height: `${bar.v}%`, minHeight: 44 }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundColor: toRgba(COLOR_MAP[bar.color], 0.18) }} />
+            <div key={bar.l} className="grid grid-cols-[88px_1fr_64px] items-center gap-3 sm:grid-cols-[128px_1fr_82px]">
+              <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">{bar.l}</span>
+              <div className="h-2 overflow-hidden rounded-full bg-surface-container-highest">
                 <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: '100%' }}
-                  transition={{ duration: 1, delay: i * 0.1 }}
-                  style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: `linear-gradient(180deg, ${toRgba(COLOR_MAP[bar.color], 0.75)} 0%, ${toRgba(COLOR_MAP[bar.color], 0.18)} 100%)` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${bar.v}%` }}
+                  transition={{ duration: 0.85, delay: i * 0.08 }}
+                  className="h-2 rounded-full"
+                  style={{ backgroundColor: COLOR_MAP[bar.color] }}
                 />
               </div>
-              <span className="font-mono text-[9px] sm:text-[10px] text-on-surface-variant uppercase tracking-widest text-center break-words">{bar.l}</span>
-              <span className="text-sm font-semibold" style={{ color: COLOR_MAP[bar.color] }}>{bar.label}</span>
+              <span className="text-right text-sm font-semibold" style={{ color: COLOR_MAP[bar.color] }}>{bar.label}</span>
             </div>
           ))}
         </div>
@@ -1394,9 +1541,9 @@ const MetricsView = () => (
                 <text x="210" y="45" fill="#f8fafc" fontSize="11">AUC test: 0.8056</text>
               </svg>
             </div>
-            <p className="mt-4 text-sm text-on-surface-variant">
+            <CollapsibleText className="mt-4 text-sm text-on-surface-variant">
               La curva ROC compara sensibilidad contra tasa de falsos positivos. Mientras más se aleja de la diagonal gris, mejor separa el modelo los casos. El punto marcado representa el umbral 0.45: una decisión operativa que favorece recuperar candidatos con potencial, aceptando que los casos cercanos requieren revisión.
-            </p>
+            </CollapsibleText>
           </div>
 
           <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-surface-container-low/60 p-5 sm:p-6">
@@ -1698,9 +1845,6 @@ export default function App() {
     { id: 'audit', label: 'Auditoría', icon: ShieldCheck },
     { id: 'simulate', label: 'Simulador', icon: Activity },
     { id: 'metrics', label: 'Métricas', icon: BarChart3 },
-    { id: 'compliance', label: 'Plan', icon: CheckCircle2 },
-    { id: 'executive-report', label: 'Informe', icon: FileText },
-    { id: 'technical-booklet', label: 'Cuadernillo', icon: BookOpen },
   ];
 
   return (
@@ -1712,14 +1856,21 @@ export default function App() {
           <span className="font-display text-xl font-bold tracking-tighter text-primary drop-shadow-[0_0_8px_rgba(192,193,255,0.4)]">NÍTIDO</span>
         </div>
         
-        <nav className="hidden md:flex items-center gap-5 font-mono text-[11px] font-bold uppercase tracking-widest">
+        <nav className="hidden md:flex items-center gap-2 rounded-full border border-white/10 bg-surface-container-low/60 p-1 font-mono text-[11px] font-bold uppercase tracking-widest">
           {navItems.map((item) => (
             <button 
               key={item.id}
               onClick={() => setActiveView(item.id as ViewId)}
-              className={`transition-colors hover:text-primary ${activeView === item.id ? "text-primary" : "text-on-surface-variant"}`}
+              className={`relative rounded-full px-4 py-2 transition-colors hover:text-primary ${activeView === item.id ? "text-primary" : "text-on-surface-variant"}`}
             >
-              {item.label}
+              {activeView === item.id && (
+                <motion.span
+                  layoutId="desktop-nav-active"
+                  className="absolute inset-0 rounded-full border border-primary/25 bg-primary/10"
+                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10">{item.label}</span>
             </button>
           ))}
         </nav>
@@ -1766,13 +1917,14 @@ export default function App() {
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex items-center gap-2 overflow-x-auto min-h-20 px-3 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] bg-surface-container/60 backdrop-blur-2xl border-t border-white/10 rounded-t-3xl">
+      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 grid grid-cols-4 gap-2 min-h-20 px-3 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] bg-surface-container/60 backdrop-blur-2xl border-t border-white/10 rounded-t-3xl">
         {navItems.map((item) => (
           <button 
             key={item.id}
             onClick={() => setActiveView(item.id as ViewId)}
-            className={`flex min-w-[58px] flex-col items-center justify-center transition-all ${activeView === item.id ? "bg-primary-container/30 text-primary rounded-2xl px-2 py-2 shadow-[0_0_15px_rgba(128,131,255,0.2)]" : "text-on-surface-variant opacity-60"}`}
+            className={`relative flex min-w-0 flex-col items-center justify-center transition-all ${activeView === item.id ? "bg-primary-container/30 text-primary rounded-2xl px-2 py-2 shadow-[0_0_15px_rgba(128,131,255,0.2)]" : "text-on-surface-variant opacity-60"}`}
           >
+            {activeView === item.id && <span className="absolute top-1 h-1 w-7 rounded-full bg-primary" />}
             <item.icon className="w-5 h-5 mb-1" />
             <span className="font-mono text-[8px] uppercase font-bold tracking-widest">{item.label}</span>
           </button>
